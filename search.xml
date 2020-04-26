@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>Hello World</title>
+    <url>/2020/04/15/hello-world/</url>
+    <content><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+]]></content>
+  </entry>
+  <entry>
+    <title>DataBinding简单使用</title>
+    <url>/2020/04/15/DataBinding%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/</url>
+    <content><![CDATA[<p>一、介绍</p>
+<ol>
+<li>MVVM介绍<br>MVVM（全称Model-View-ViewModel）同MVC和MVP一样，是逻辑分层解偶的模式（如果你还不了解MVC和MVP，建议还是提前了解一下）。</li>
+</ol>
+<p>1.1 结构图<br>MVVM结构图</p>
+<p>从上图我们可以了解到MVVM的三要素，他们分别是：</p>
+<p>View层：xml、Activity、Fragment、Adapter和View等<br>Model层：数据源（本地数据和网络数据等）<br>ViewModel层：View层处理数据以及逻辑处理<br>2. Data Binding介绍<br>Data Binding不算特别新的东西，2015年Google就推出了，但即便是现在，很多人都没有学习过它，我就是这些工程师中的一位，因为我觉得MVP已经足够帮我处理日常的业务，Android Jetpack的出现，是我研究Data Binding的一个契机。</p>
+<p>在进行下文之前，我有必要声明一下，MVVM和Data Binding是两个不同的概念，MVVM是一种架构模式，而Data Binding是一个实现数据和UI绑定的框架，是构建MVVM模式的一个工具。</p>
+<p>2.1 学习姿势<br>我依然认为官方文档是最好的学习途径：<br>官方文档：Data Binding Library<br>谷歌实验室：官方教程<br>官方Demo地址：<a href="https://github.com/googlecodelabs/android-databinding">https://github.com/googlecodelabs/android-databinding</a></p>
+<p>二、实战<br>在这里，我打算先在上一节即学即用Android Jetpack - Navigation的基础代码上进行拓展（如有涉及到Navigation的代码，我会注明），本文会在登录和注册模块的基础上进行讲解，后期如有需要，会拓展到其他模块。</p>
+<p>效果图，和之前的有点不一样：</p>
+<p>Data Binding<br>第一步 在app模块下的build.gradle文件添加内容<br>android {<br>…<br>    dataBinding {<br>       enabled true<br>    }<br>}<br>第二步 构建LoginModel<br>创建登录的LoginModel，LoginModel主要负责登录逻辑的处理以及两个输入框内容改变的时候数据更新的处理：</p>
+<p>class LoginModel constructor(name: String, pwd: String, context: Context) {<br>    val n = ObservableField<String>(name)<br>    val p = ObservableField<String>(pwd)<br>    var context: Context = context</p>
+<pre><code>/**
+ * 用户名改变回调的函数
+ */
+fun onNameChanged(s: CharSequence) {
+    n.set(s.toString())
+}
+
+/**
+ * 密码改变的回调函数
+ */
+fun onPwdChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+    p.set(s.toString())
+}
+
+fun login() {
+    if (n.get().equals(BaseConstant.USER_NAME)
+        &amp;&amp; p.get().equals(BaseConstant.USER_PWD)
+    ) {
+        Toast.makeText(context, &quot;账号密码正确&quot;, Toast.LENGTH_SHORT).show()
+        val intent = Intent(context, MainActivity::class.java)
+        context.startActivity(intent)
+    }
+}</code></pre><p>}<br>我相信同学们可能会对ObservableField存在疑惑，那么ObservableField是什么呢？它其实是一个可观察的域，通过泛型来使用，可以使用的方法也就三个：</p>
+<p>方法    作用<br>ObservableField(T value)    构造函数，设置可观察的域<br>T get()    获取可观察的域的内容，可以使用UI控件监测它的值<br>set(T value)    设置可观察的域，设置成功之后，会通知UI控件进行更新<br>不过，除了使用ObservableField之外，Data Binding为我们提供了基本类型的ObservableXXX(如ObservableInt)和存放容器的ObservableXXX(如ObservableList<T>)等，同样，如果你想让你自定义的类变成可观察状态，需要实现Observable接口。</p>
+<p>我们再回头看看LoginModel这个类，它其实只有分别用来观察name和pwd的成员变量n和p，外加一个处理登录逻辑的方法，非常简单。</p>
+<p>第三步 创建布局文件<br>引入Data Binding之后的布局文件的使用方式会和以前的布局使用方式有很大的不同，且听我一一解释：</p>
+<p>标签名    作用<br>layout    用作布局的根节点，只能包裹一个View标签，且不能包裹merge标签。<br>data    Data Binding的数据，只能存在一个data标签。<br>variable    data中使用，数据的变量标签，type属性指明变量的类，如com.joe.jetpackdemo.viewmodel.LoginModel。name属性指明变量的名字，方便布局中使用。<br>import    data中使用，需要使用静态方法和静态常量，如需要使用View.Visble属性的时候，则需导入<import type="android.view.View"/>。type属性指明类的路径，如果两个import标签导入的类名相同，则可以使用alias属性声明别名，使用的时候直接使用别名即可。<br>include    View标签中使用，作用同普通布局中的include一样，需要使用bind:&lt;参数名&gt;传递参数<br>我们再看一下LoginFragment下的fragment_login.xml布局文件：</p>
+<?xml version="1.0" encoding="utf-8"?>
+<p><layout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"></p>
+<pre><code>&lt;data&gt;
+    &lt;!--需要的viewModel,通过mBinding.vm=mViewMode注入--&gt;
+    &lt;variable
+        name=&quot;model&quot;
+        type=&quot;com.joe.jetpackdemo.viewmodel.LoginModel&quot;/&gt;
+
+    &lt;variable
+        name=&quot;activity&quot;
+        type=&quot;androidx.fragment.app.FragmentActivity&quot;/&gt;
+&lt;/data&gt;
+
+&lt;androidx.constraintlayout.widget.ConstraintLayout
+    android:layout_width=&quot;match_parent&quot;
+    android:layout_height=&quot;match_parent&quot;&gt;
+
+    &lt;TextView
+        android:id=&quot;@+id/txt_cancel&quot;
+        android:onClick=&quot;@{()-&gt; activity.onBackPressed()}&quot;
+        /&gt;
+
+    &lt;TextView
+        android:id=&quot;@+id/txt_title&quot;
+        app:layout_constraintTop_toTopOf=&quot;parent&quot;
+        .../&gt;
+
+    &lt;EditText
+        android:id=&quot;@+id/et_account&quot;
+        android:text=&quot;@{model.n.get()}&quot;
+        android:onTextChanged=&quot;@{(text, start, before, count)-&gt;model.onNameChanged(text)}&quot;
+        ...
+        /&gt;
+
+    &lt;EditText
+        android:id=&quot;@+id/et_pwd&quot;
+        android:text=&quot;@{model.p.get()}&quot;
+        android:onTextChanged=&quot;@{model::onPwdChanged}&quot;
+        ...
+        /&gt;
+
+    &lt;Button
+        android:id=&quot;@+id/btn_login&quot;
+        android:text=&quot;Sign in&quot;
+        android:onClick=&quot;@{() -&gt; model.login()}&quot;
+        android:enabled=&quot;@{(model.p.get().isEmpty()||model.n.get().isEmpty()) ? false : true}&quot;
+        .../&gt;
+
+
+&lt;/androidx.constraintlayout.widget.ConstraintLayout&gt;</code></pre></layout>
+variable有两个:
+
+<p>model：类型为com.joe.jetpackdemo.viewmodel.LoginModel，绑定用户名详见et_accountEditText中的android:text=”@{model.n.get()}”，当EditText输入框内容变化的时候有如下处理android:onTextChanged=”@{(text, start, before, count)-&gt;model.onNameChanged(text)}”，以及登录按钮处理android:onClick=”@{() -&gt; model.login()}”。<br>activity：类型为androidx.fragment.app.FragmentActivity，主要用来返回按钮的事件处理，详见txt_cancelTextView的android:onClick=”@{()-&gt; activity.onBackPressed()}”。<br>对于以上的内容，我仍然有知识点需要讲解：</p>
+<ol>
+<li><p>属性的引用<br>如果想使用ViewModel中成员变量，如直接使用model.p。</p>
+</li>
+<li><p>事件绑定<br>事件绑定包括方法引用和监听绑定：</p>
+</li>
+</ol>
+<p>方法引用：参数类型和返回类型要一致，参考et_pwdEditText的android:onTextChanged引用。<br>监听绑定：相比较于方法引用，监听绑定的要求就没那么高了，我们可以使用自行定义的函数，参考et_accountEditText的android:onTextChanged引用。<br>3. 表达式<br>如果你注意到了btn_loginButton在密码没有内容的时候是灰色的：<br>LoginFragment<br>是因为它在android:enabled使用了表达式：@{(model.p.get().isEmpty()||model.n.get().isEmpty()) ? false : true}，它的意思是用户名和密码为空的时候登录的enable属性为false，这是普通的三元表达式，除了上述的||和三元表达式之外，Data Binding还支持：</p>
+<p>运算符 + - / * %<br>字符串连接 +<br>逻辑与或 &amp;&amp; ||<br>二进制 &amp; | ^<br>一元 + - ! ~<br>移位 &gt;&gt; &gt;&gt;&gt; &lt;&lt;<br>比较 == &gt; &lt; &gt;= &lt;= (Note that &lt; needs to be escaped as &lt;)<br>instanceof<br>Grouping ()<br>Literals - character, String, numeric, null<br>Cast<br>方法调用<br>域访问<br>数组访问<br>三元操作符<br>除了上述之外，Data Binding新增了空合并操作符??，例如android:text=”@{user.displayName ?? user.lastName}”，它等价于android:text=”@{user.displayName != null ? user.displayName : user.lastName}”。</p>
+<p>第四步 生成绑定类<br>我们的布局文件创建完毕之后，点击Build下面的Make Project，让系统帮我生成绑定类，生成绑定的类如下：<br>生成的绑定类</p>
+<p>下面我们只需在LoginFragment完成绑定即可，绑定操作既可以使用上述生成的FragmentLoginBinding也可以使用自带的DataBindingUtil完成：</p>
+<ol>
+<li>使用DataBindingUtil<br>我们可以看一下DataBindingUtil的一些常用Api：</li>
+</ol>
+<p>函数名    作用<br>setContentView    用来进行Activity下面的绑定<br>inflate    用来进行Fragment下面的绑定<br>bind    用来进行View的绑定<br>LoginFragment绑定代码如下：</p>
+<pre><code>override fun onCreateView(
+    inflater: LayoutInflater, container: ViewGroup?,
+    savedInstanceState: Bundle?
+): View? {
+    val binding: FragmentLoginBinding = DataBindingUtil.inflate(
+        inflater
+        , R.layout.fragment_login
+        , container
+        , false
+    )
+    loginModel = LoginModel(&quot;&quot;,&quot;&quot;,context!!)
+    binding.model = loginModel
+    binding.activity = activity
+    return binding.root
+}</code></pre><ol start="2">
+<li>使用生成的FragmentLoginBinding<br>使用方法与第一种类似，仅需将生成方式改成val binding = FragmentLoginBinding.inflate( inflater , container , false )即可</li>
+</ol>
+<p>运行一下代码，开始图的效果就出现了。</p>
+<p>三、更多<br>Data Binding还有一些有趣的功能，为了让同学们了解到更多的知识，我们在这里有必要探讨一下：</p>
+<ol>
+<li>布局中属性的设置</li>
+<li>1 有属性有setter的情况<br>如果XXXView类有成员变量borderColor，并且XXXView类有setBoderColor(int color)方法，那么在布局中我们就可以借助Data Binding直接使用app:borderColor这个属性，不太明白？没关系，以DrawerLayout为例，DrawerLayout没有声明app:scrimColor、app:drawerListener，但是DrawerLayout有mScrimColor:int、mListener:DrawerListener这两个成员变量并且具有这两个属性的setter的方法，他就可以直接使用app:scrimColor、app:drawerListener这两个属性，代码如下：</li>
+</ol>
+<p>&lt;android.support.v4.widget.DrawerLayout<br>    android:layout_width=”wrap_content”<br>    android:layout_height=”wrap_content”<br>    app:scrimColor=”@{@color/scrim}”<br>    app:drawerListener=”@{fragment.drawerListener}”&gt;<br>1.2 没有setter但是有相关方法<br>还用XXXView为例，它有成员变量borderColor，这次设置borderColor的方法是setBColor(总有程序员乱写方法名~)，强行用app:borderColor显然是行不通的，可以这样用的前提是必须有setBoderColor(int color)方法，显然setBColor不匹配，但我们可以通过BindingMethods注解实现app:borderColor的使用，代码如下：</p>
+<p>@BindingMethods(value = [<br>    BindingMethod(<br>        type = 包名.XXXView::class,<br>        attribute = “app:borderColor”,<br>        method = “setBColor”)])<br>1.3 自定义属性<br>这次不仅没setter方法，甚至连成员变量都需要自带（条件越来越刻苦~），这次我们的目标就是给EditText添加文本监听器，先在LoginModel中自定义一个监听器并使用@BindingAdapter注解：</p>
+<pre><code>// SimpleWatcher 是简化了的TextWatcher
+val nameWatcher = object : SimpleWatcher() {
+    override fun afterTextChanged(s: Editable) {
+        super.afterTextChanged(s)
+
+        n.set(s.toString())
+    }
+}
+
+@BindingAdapter(&quot;addTextChangedListener&quot;)
+fun addTextChangedListener(editText: EditText, simpleWatcher: SimpleWatcher) {
+    editText.addTextChangedListener(simpleWatcher)
+}</code></pre><p>这样我们就可以在布局文件中对EditText愉快的使用app:addTextChangedListener属性了：</p>
+<pre><code>&lt;EditText
+    android:id=&quot;@+id/et_account&quot;
+    android:text=&quot;@{model.n.get()}&quot;
+    app:addTextChangedListener=&quot;@{model.nameWatcher}&quot;
+    ...
+    /&gt;</code></pre><p>效果与我们之前使用的时候一样</p>
+<ol start="2">
+<li><p>双向绑定<br>使用双向绑定可以简化我们的代码，比如我们上面的EditText在实现双向绑定之后既不需要添加SimpleWatcher也不需要用方法调用，怎么实现呢？代码如下：</p>
+<pre><code>&lt;EditText
+    android:id=&quot;@+id/et_account&quot;
+    android:text=&quot;@={model.n.get()}&quot;
+    ...
+    /&gt;</code></pre><p>仅仅在将@{model.n.get()}替换为@={model.n.get()}，多了一个=号而已，需要注意的是，属性必须是可观察的，可以使用上面提到的ObservableField，也可以自定义实现BaseObservable接口，双向绑定的时候需要注意无限循环，更多关于双向绑定还请查看官方文档。</p>
+</li>
+</ol>
+<p>四、总结<br>Data Binding总结</p>
+<p>作者：TeaOf<br>链接：<a href="https://www.jianshu.com/p/e3b881d80c6d" target="_blank" rel="noopener">https://www.jianshu.com/p/e3b881d80c6d</a><br>来源：简书<br>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</p>
+]]></content>
+      <tags>
+        <tag>Android Jetpack</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>LiveData&amp;ViewModel</title>
+    <url>/2020/04/15/LiveData&amp;ViewModel/</url>
+    <content><![CDATA[<p><img src="https://upload-images.jianshu.io/upload_images/9271486-0182c64db18e4e98.png" alt="目录"></p>
+<p>目录<br>一、LiveData<br>友情提醒：<br>官方文档：LiveData</p>
+<p>在讲LiveData之前，我们先看看LiveData和ViewModel的作用：<br>LiveData和ViewModel的作用</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/9271486-93980cb4a2458d6d.png" alt="用力图"></p>
+<p>从这一张图，我们可以看出ViewModel和LiveData在整个MVVM架构中担当数据驱动的职责，这也是MVVM模式中ViewModel层的作用。</p>
+<ol>
+<li>介绍<br>看了上面的图，对于LiveData我们还是感到疑惑，那么我们看看官网是如何定义的：</li>
+</ol>
+<p>LiveData is an observable data holder class. Unlike a regular observable, LiveData is lifecycle-aware, meaning it respects the lifecycle of other app components, such as activities, fragments, or services.</p>
+<p>从官网的介绍可以看到，LiveData作用跟RxJava类似，是观察数据的类，相比RxJava，它能够在Activity、Fragment和Service之中正确的处理生命周期。那么LiveData有什么优点呢？</p>
+<p>数据变更的时候更新UI<br>没有内存泄漏<br>不会因为停止Activity崩溃<br>无需手动处理生命周期<br>共享资源<br>乍看之下LiveData挺鸡肋的，事实也确实如此，因为LiveData能够实现的功能RxJava也可以实现，而且与LiveData相比，RxJava拥有着更加丰富的生态，当然，谷歌的官方架构仍然值得我们去学习。</p>
+<ol start="2">
+<li>使用方式<br>LiveData常用的方法也就如下几个：</li>
+</ol>
+<p>方法名    作用<br>observe(@NonNull LifecycleOwner owner, @NonNull Observer&lt;? super T&gt; observer)    最常用的方法，需要提供Observer处理数据变更后的处理。LifecycleOwner则是我们能够正确处理声明周期的关键！<br>setValue(T value)    设置数据<br>getValue():T    获取数据<br>postValue(T value)    在主线程中更新数据<br>3. 使用场景<br>我看见绝大部分的LiveData都是配合其他Android Jetpack组件使用的，具体情况具体分析。</p>
+<p>ViewModel: 见下文。<br>Room：先参考Demo，文章后续推出。<br>二、ViewModel<br>友情提醒：<br>官方文档：ViewModel<br>谷歌实验室：教程<br>谷歌官方Demo地址：<a href="https://github.com/googlecodelabs/android-lifecycles">https://github.com/googlecodelabs/android-lifecycles</a></p>
+<p>众所周知，MVVM层中ViewModel层用来作逻辑处理的，那么我们Android Jetpack组件中ViewModel的作用是否也一致呢？</p>
+<ol>
+<li>介绍<br>我们先来看官网的介绍：</li>
+</ol>
+<p>The ViewModel class is designed to store and manage UI-related data in a lifecycle conscious way. The ViewModel class allows data to survive configuration changes such as screen rotations.</p>
+<p>ViewModel同样具有生命周期意识的处理跟UI相关的数据，并且，当设备的一些配置信息改变（例如屏幕旋转）它的数据不会消失。</p>
+<p>通常情况下，如果我们不做特殊处理，当屏幕旋转的时候，数据会消失，那ViewModel管理的数据为什么不会消失呢，是因为ViewModel的生命周期：<br>ViewModel的生命周期<br><img src="https://upload-images.jianshu.io/upload_images/9271486-affb4a4c1b588208.png" alt="ViewModel生命周期"><br>ViewModel的另一个特点就是同一个Activity的Fragment之间可以使用ViewModel实现共享数据。</p>
+<ol start="2">
+<li><p>使用方法<br>继承ViewModel即可。</p>
+</li>
+<li><p>实战<br>第一步：添加依赖<br>添加进module下面的build.gradle：</p>
+</li>
+</ol>
+<p>ext.lifecycleVersion = ‘2.2.0-alpha01’<br>dependencies {<br>    //…</p>
+<pre><code>// liveData
+implementation &quot;androidx.lifecycle:lifecycle-livedata-ktx:$rootProject.lifecycleVersion&quot;
+// viewModel
+implementation &quot;androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.lifecycleVersion&quot;
+implementation &quot;androidx.lifecycle:lifecycle-extensions:$rootProject.lifecycleVersion&quot;</code></pre><p>}<br>第二步：创建ShoeModel<br>继承ViewModel类，分别创建对品牌名的观察对象brand:MutableLiveData<String>和对鞋子集合的观察对象shoes: LiveData&lt;List<Shoe>&gt;：</p>
+<p>class ShoeModel constructor(shoeRepository: ShoeRepository) : ViewModel() {</p>
+<pre><code>// 品牌的观察对象 默认观察所有的品牌
+private val brand = MutableLiveData&lt;String&gt;().apply {
+    value = ALL
+}
+
+// 鞋子集合的观察类
+val shoes: LiveData&lt;List&lt;Shoe&gt;&gt; = brand.switchMap {
+    // Room数据库查询，只要知道返回的是LiveData&lt;List&lt;Shoe&gt;&gt;即可
+    if (it == ALL) {
+        shoeRepository.getAllShoes()
+    } else {
+        shoeRepository.getShoesByBrand(it)
+    }
+}
+
+//... 不重要的函数省略
+
+companion object {
+    private const val ALL = &quot;所有&quot;
+}</code></pre><p>}<br>第三步：获取ViewModel<br>无构造参数获取：<br>构造函数没有参数的情况下，获取ShoeModel很简单，ViewModelProviders.of(this).get(ShoeModel::class.java)这样就可以返回一个我们需要的ShoeModel了。<br>有构造参数获取<br>不过，上面的ShoeModel中我们在构造函数中需要一个ShoeRepository参数，上述方法是显然行不通的，这种情况下我们需要自定义实现Factory：</p>
+<p>class ShoeModelFactory(<br>    private val repository: ShoeRepository<br>) : ViewModelProvider.NewInstanceFactory() {<br>    override fun &lt;T : ViewModel?&gt; create(modelClass: Class<T>): T {<br>        return ShoeModel(repository) as T<br>    }<br>}<br>为了使用方便，又写了一个工具类CustomViewModelProvider：</p>
+<p>object CustomViewModelProvider {</p>
+<pre><code>// ...省略无关代码
+
+fun providerShoeModel(context: Context):ShoeModelFactory{
+    val repository:ShoeRepository = RepositoryProvider.providerShoeRepository(context)
+    return ShoeModelFactory(repository)
+}</code></pre><p>}<br>最后在ShoeFragment中获取：</p>
+<pre><code>// by viewModels 需要依赖 &quot;androidx.navigation:navigation-ui-ktx:$rootProject.navigationVersion&quot;
+private val viewModel: ShoeModel by viewModels {
+    CustomViewModelProvider.providerShoeModel(requireContext())
+}</code></pre><p>第四步：使用ViewModel<br>ViewModel的使用需要结合具体的业务，比如我这里的ShoeModel，因为ShoeFragment的代码不多，我直接贴出来：</p>
+<p>/**</p>
+<ul>
+<li><p>鞋子集合的Fragment</p>
+</li>
+<li></li>
+<li><p>/<br>class ShoeFragment : Fragment() {</p>
+<p>  // by viewModels 需要依赖 “androidx.navigation:navigation-ui-ktx:$rootProject.navigationVersion”<br>  private val viewModel: ShoeModel by viewModels {</p>
+<pre><code>CustomViewModelProvider.providerShoeModel(requireContext())</code></pre><p>  }</p>
+<p>  override fun onCreateView(</p>
+<pre><code>inflater: LayoutInflater, container: ViewGroup?,
+savedInstanceState: Bundle?</code></pre><p>  ): View? {</p>
+<pre><code>val binding: FragmentShoeBinding = FragmentShoeBinding.inflate(inflater, container, false)
+context ?: return binding.root
+ViewModelProviders.of(this).get(ShoeModel::class.java)
+// RecyclerView 的适配器 ShoeAdapter
+val adapter = ShoeAdapter()
+binding.recycler.adapter = adapter
+onSubscribeUi(adapter)
+return binding.root</code></pre><p>  }</p>
+<p>  /**</p>
+<ul>
+<li>鞋子数据更新的通知</li>
+<li>/<br>private fun onSubscribeUi(adapter: ShoeAdapter) {<br>  viewModel.shoes.observe(viewLifecycleOwner, Observer {<pre><code>if (it != null) {
+    adapter.submitList(it)
+}</code></pre>  })<br>}<br>}<br>在onSubscribeUi方法中，我们使用ShoeModel的LiveData进行了观察通知，当鞋子集合更新的时候，会更新到当前RecyclerView中的适配器。</li>
+</ul>
+</li>
+</ul>
+<p>布局文件fragment_shoe.xml很简单，虽使用了Data Binding，但是没有变量，且只有一个RecyclerView，这里不再赘述。ShoeAdapter的实现同样简单，感兴趣的可以查看源码，这里同样不再赘述。</p>
+<p>这样写完之后，本文一开始的图的效果就出现了~</p>
+<p>三、更多<br>一个例子并不能展现所有的关于LiveData和ViewModel的内容。LiveData和ViewModel仍有一些知识需要我们注意。</p>
+<ol>
+<li>LiveData数据变换<br>LiveData中数据变换方法有map()和switchMap()，关于switchMap()，我在上面实战的ShoeModel已经实践过了：</li>
+</ol>
+<p>// 本地数据仓库<br>class ShoeRepository private constructor(private val shoeDao: ShoeDao) {</p>
+<pre><code>fun getAllShoes() = shoeDao.getAllShoes()
+
+/**
+ * 通过品牌查询鞋子 返回 LiveData&lt;List&lt;Shoe&gt;&gt;
+ */
+fun getShoesByBrand(brand:String) = shoeDao.findShoeByBrand(brand)
+
+/**
+ * 插入鞋子的集合 返回 LiveData&lt;List&lt;Shoe&gt;&gt;
+ */
+fun insertShoes(shoes: List&lt;Shoe&gt;) = shoeDao.insertShoes(shoes)
+
+// ... 单例省略</code></pre><p>}</p>
+<p>class ShoeModel constructor(shoeRepository: ShoeRepository) : ViewModel() {</p>
+<pre><code>// 品牌的观察对象 默认观察所有的品牌
+private val brand = MutableLiveData&lt;String&gt;().apply {
+    value = ALL
+}
+
+// 鞋子集合的观察类
+val shoes: LiveData&lt;List&lt;Shoe&gt;&gt; = brand.switchMap {
+    // Room数据库查询，只要知道返回的是LiveData&lt;List&lt;Shoe&gt;&gt;即可
+    if (it == ALL) {
+        shoeRepository.getAllShoes()
+    } else {
+        shoeRepository.getShoesByBrand(it)
+    }
+}</code></pre><p>}<br>map()的使用我们借用官方的例子：</p>
+<p>val userLiveData: LiveData<User> = UserLiveData()<br>val userName: LiveData<String> = Transformations.map(userLiveData) {<br>    user -&gt; “${user.name} ${user.lastName}”<br>}<br>可以看到，map()同样可以实现将A变成B，那么switchMap()和map()的区别是什么？map()中只有一个LiveData<A>，他是在LiveData<A>发送数据的时候把A变成B，而switchMap()中同时存在LiveData<A>和LiveData<B>，LiveData<A>更新之后通知LiveData<B>更新。</p>
+<ol start="2">
+<li>LiveData如何共享数据<br>假设我们有这样的需求：注册页需要记录信息，注册完成跳转到登录页，并将账号和密码显示在登录页。这种情况下，我们可以定义一个类然后继承LiveData，并使用单例模式即可：</li>
+</ol>
+<p>// 登录信息<br>data class LoginInfo constructor(val account:String, val pwd:String, val email:String)</p>
+<p>/**</p>
+<ul>
+<li><p>自定义单例LiveData</p>
+</li>
+<li><p>/<br>class LoginLiveData:LiveData<LoginInfo>() {</p>
+<p>  companion object {</p>
+<pre><code>private lateinit var sInstance: LoginLiveData
+
+@MainThread
+fun get(): LoginLiveData {
+    sInstance = if (::sInstance.isInitialized) sInstance else LoginLiveData()
+    return sInstance
+}</code></pre><p>  }<br>}<br>需要实例的时候用单例创建即可。</p>
+</li>
+</ul>
+<ol start="3">
+<li>使用ViewModel在同一个Activity中的Fragment之间共享数据<br>想要利用ViewModel实现Fragment之间数据共享，前提是Fragment中的FragmentActivity得相同，这里直接贴上官方的代码：</li>
+</ol>
+<p>class SharedViewModel : ViewModel() {<br>    val selected = MutableLiveData<Item>()</p>
+<pre><code>fun select(item: Item) {
+    selected.value = item
+}</code></pre><p>}</p>
+<p>class MasterFragment : Fragment() {</p>
+<pre><code>private lateinit var itemSelector: Selector
+
+private lateinit var model: SharedViewModel
+
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    model = activity?.run {
+        ViewModelProviders.of(this).get(SharedViewModel::class.java)
+    } ?: throw Exception(&quot;Invalid Activity&quot;)
+    itemSelector.setOnClickListener { item -&gt;
+        // Update the UI
+    }
+}</code></pre><p>}</p>
+<p>class DetailFragment : Fragment() {</p>
+<pre><code>private lateinit var model: SharedViewModel
+
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    model = activity?.run {
+        ViewModelProviders.of(this).get(SharedViewModel::class.java)
+    } ?: throw Exception(&quot;Invalid Activity&quot;)
+    model.selected.observe(this, Observer&lt;Item&gt; { item -&gt;
+        // Update the UI
+    })
+}</code></pre><p>}<br>四、总结<br><img src="https://upload-images.jianshu.io/upload_images/9271486-f1370a76e4e189bd.png" alt="总结"></p>
+<p>作者：TeaOf<br>链接：<a href="https://www.jianshu.com/p/81a284969f03" target="_blank" rel="noopener">https://www.jianshu.com/p/81a284969f03</a><br>来源：简书<br>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</p>
+]]></content>
+      <tags>
+        <tag>Android Jetpack</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>BottomNavigation工作原理</title>
+    <url>/2020/04/26/BottomNavigation%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/</url>
+    <content><![CDATA[<h1 id="BottomNavigation工作原理"><a href="#BottomNavigation工作原理" class="headerlink" title="BottomNavigation工作原理"></a>BottomNavigation工作原理</h1><h1 id="使用BottomNavigationView组件进行底部导航栏的创建"><a href="#使用BottomNavigationView组件进行底部导航栏的创建" class="headerlink" title="使用BottomNavigationView组件进行底部导航栏的创建"></a>使用BottomNavigationView组件进行底部导航栏的创建</h1><h2 id="BottomNavigationView可以与Menu进行交互使用，menu的顺序决定了BottomNavigationView-下方的Item顺序。"><a href="#BottomNavigationView可以与Menu进行交互使用，menu的顺序决定了BottomNavigationView-下方的Item顺序。" class="headerlink" title="BottomNavigationView可以与Menu进行交互使用，menu的顺序决定了BottomNavigationView 下方的Item顺序。"></a>BottomNavigationView可以与Menu进行交互使用，menu的顺序决定了BottomNavigationView 下方的Item顺序。</h2><h2 id="fragment控件中"><a href="#fragment控件中" class="headerlink" title="fragment控件中"></a>fragment控件中</h2><p>name属性为指定初始化的Fragment<br>defaultNavHost属性（检查当前的栈中是否有其余的Fragment，如果有则会拦截返回手势以及返回键，将栈中下一个Fragment呈现，而不是弹出所有Framgnet）<br>navGraph属性为制定的FrgmentNavigation的路由结构</p>
+<h2 id="在NavigationGraph中"><a href="#在NavigationGraph中" class="headerlink" title="在NavigationGraph中"></a>在NavigationGraph中</h2><p>fragment标签内的 action子标签可以指定跳转的Fragment</p>
+<p>argument字标签可以传递参数（name为参数id ， argType为参数类型 defaultValue为传递内容）</p>
+<p>deeplink字标签可以指定跳转的uri，类似于intent传递uri打开一个网址(可以用于三方应用通过路径拉起APP，实例如下</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//在NavigationGraph配置好Uri后，可以直接通过NavController的handleDeepLink来吊起URL</span></span><br><span class="line">       navController.handleDeepLink(intent)</span><br></pre></td></tr></table></figure>
+
+<h1 id="源码部分"><a href="#源码部分" class="headerlink" title="源码部分"></a>源码部分</h1><h2 id="关于handleDeepLink的处理源码"><a href="#关于handleDeepLink的处理源码" class="headerlink" title="关于handleDeepLink的处理源码"></a>关于handleDeepLink的处理源码</h2><p>{</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">handleDeepLink</span><span class="params">(@Nullable Intent intent)</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="comment">//点击handleDeeLink方法后，进入NavConTroller源码，可以看到将我们传递的intent传入方法后，通过intent.getData()来获取到DeepLinkMatch的对象</span></span><br><span class="line">	  NavDestination.DeepLinkMatch matchingDeepLink = mGraph.matchDeepLink(intent.getData());</span><br><span class="line">     <span class="comment">//在通过上述对象构造出DeepLinkIds数组，这个数组包含了根节点(root节点)-&gt;当前节点(destination)的一个节点ID数组</span></span><br><span class="line">	   deepLink = matchingDeepLink.getDestination().buildDeepLinkIds();</span><br><span class="line">	   <span class="comment">//拿到节点数组之后，进行了一次deepLink的遍历(遍历每一个页面的节点)</span></span><br><span class="line">	   <span class="comment">//并通过节点来获取到NavDestination (页面)</span></span><br><span class="line">	   <span class="keyword">while</span> (index &lt; deepLink.length) &#123;</span><br><span class="line">                <span class="keyword">int</span> destinationId = deepLink[index++];</span><br><span class="line">                NavDestination node = findDestination(destinationId);</span><br><span class="line">                ...</span><br><span class="line">                <span class="comment">//在传递给navigate路由让他打开一个个的页面</span></span><br><span class="line">                <span class="comment">//所以navigate的打开是按照顺序一个个的压入栈内，而不是用到一个打开一个(外部应用拉起页面的时候)</span></span><br><span class="line">                <span class="comment">//缺点是性能差一些，优点便于管理</span></span><br><span class="line">                navigate(node, bundle,</span><br><span class="line">                        <span class="keyword">new</span> NavOptions.Builder().setEnterAnim(<span class="number">0</span>).setExitAnim(<span class="number">0</span>).build(), <span class="keyword">null</span>);</span><br><span class="line">            &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Navigation的缺点"><a href="#Navigation的缺点" class="headerlink" title="Navigation的缺点"></a>Navigation的缺点</h1><p>当前APP都是分模块、组件来开发，在配置fragment的时候，很有可能不知道fragment的全命名。<br>所以要对Navigation进行改造</p>
+<h1 id="Navigation的工作流程"><a href="#Navigation的工作流程" class="headerlink" title="Navigation的工作流程"></a>Navigation的工作流程</h1><h2 id="NavHostFragment-入口"><a href="#NavHostFragment-入口" class="headerlink" title="NavHostFragment(入口)"></a>NavHostFragment(入口)</h2><p>在OnCreate生命周期中，新建了NavController，来管理Fragment，也就是控制器<br>当NavHost想要切换Fragment的时候，也就是将控制的能力委托给了NavController来进行切换</p>
+<h3 id="NavCrontroller流程"><a href="#NavCrontroller流程" class="headerlink" title="NavCrontroller流程"></a>NavCrontroller流程</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//创建NavController</span></span><br><span class="line"> mNavController = <span class="keyword">new</span> NavController(context);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> <span class="comment">//为下述两种Fragment添加跳转切换能力</span></span><br><span class="line"> <span class="comment">//创建FragmentNavigator传递给NavController</span></span><br><span class="line"> <span class="comment">//addNavigator(添加了导航器（添加的是Fragment的导航器）)</span></span><br><span class="line"></span><br><span class="line"> mNavController.getNavigatorProvider().addNavigator(createFragmentNavigator());</span><br><span class="line"><span class="comment">//其他版本源码还有 addNavigation(new DialogFragmentNavigator(requireContext()),getChildFragmentManager())    &lt;- DialogFragment的Navigater</span></span><br><span class="line"></span><br><span class="line"> <span class="comment">//并且在NavController的构造函数里还存在另外两种的Navigator</span></span><br><span class="line"> <span class="comment">//NavGraphNavigator：当我们配置好NavGraph后，NavGraphNavigator会自动跳转到默认启动页(展示的第一个页面))</span></span><br><span class="line">  mNavigatorProvider.addNavigator(<span class="keyword">new</span> NavGraphNavigator(mNavigatorProvider));</span><br><span class="line">  mNavigatorProvider.addNavigator(<span class="keyword">new</span> ActivityNavigator(mContext));</span><br></pre></td></tr></table></figure>
+<p>NavigatorProvider是一个HashMap，以键值对的新形势用来存放Navigator导航器的实例</p>
+<h2 id="四种Navigator的相同点和不同点"><a href="#四种Navigator的相同点和不同点" class="headerlink" title="四种Navigator的相同点和不同点"></a>四种Navigator的相同点和不同点</h2><p>四种导航器（Navigator）都是Navigator(抽象类)的子类并且Navigator要传递一个泛型&lt;D extends NavDestination(NavDestination代表他们的页面)&gt;泛型的作用用来保证一种类型的Navigator只能创建一种Navigator</p>
+<h3 id="Navigator源码"><a href="#Navigator源码" class="headerlink" title="Navigator源码"></a>Navigator源码</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line"> <span class="comment">//Navigator中的Name注解</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//作用：This annotation should be added to each Navigator subclass to denote the default name used</span></span><br><span class="line">    <span class="comment">//* to register the Navigator with a &#123;@link NavigatorProvider&#125;.</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//作用I</span></span><br><span class="line"><span class="comment">//Navigator的name注解必须添加name注解参数，用来注册到NavigatorProvider里</span></span><br><span class="line"><span class="comment">//也就是NavigatorProvider(HashMap)用来存储时候的key 而value就是Navigator的实例</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//作用II</span></span><br><span class="line"><span class="comment">//name同时也用来创建Desination的时候，通过name来得到导航器Navigator的名称，</span></span><br><span class="line"><span class="comment">//可以看createDestination()方法NavDesination的构造函数(getNameForNavigator()方法获取  通过Name来跳转到对应页面)</span></span><br><span class="line"></span><br><span class="line"> <span class="meta">@Retention</span>(RUNTIME)</span><br><span class="line">    <span class="meta">@Target</span>(&#123;TYPE&#125;)</span><br><span class="line">    <span class="meta">@SuppressWarnings</span>(<span class="string">"UnknownNullness"</span>) <span class="comment">// TODO https://issuetracker.google.com/issues/112185120</span></span><br><span class="line">    <span class="keyword">public</span> <span class="meta">@interface</span> Name &#123;</span><br><span class="line">        <span class="function">String <span class="title">value</span><span class="params">()</span></span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> <span class="comment">// Navigator中的navigate方法(用来完成页面的跳转)</span></span><br><span class="line"> <span class="comment">//每一种Navigator的跳转方式不同，所以navigate设计成抽象类，让四种不同的Navigator来继承分别实现不同的跳转</span></span><br><span class="line"></span><br><span class="line"> <span class="meta">@Nullable</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> NavDestination <span class="title">navigate</span><span class="params">(@NonNull D destination, @Nullable Bundle args,</span></span></span><br><span class="line"><span class="function"><span class="params">            @Nullable NavOptions navOptions, @Nullable Extras navigatorExtras)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//需不需要拦截系统返回键来进行回退栈操作</span></span><br><span class="line"> <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">boolean</span> <span class="title">popBackStack</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//Extras接口，实现该接口，可以再跳转的时候来进行一些额外的行为操作</span></span><br><span class="line"> <span class="comment">//比如过渡元素和转场动画等</span></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Interface indicating that this class should be passed to its respective</span></span><br><span class="line"><span class="comment">     * &#123;<span class="doctag">@link</span> Navigator&#125; to enable Navigator specific behavior.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Extras</span> </span>&#123;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="四种Navigator导航器"><a href="#四种Navigator导航器" class="headerlink" title="四种Navigator导航器"></a>四种Navigator导航器</h1><h2 id="ActityNavigator"><a href="#ActityNavigator" class="headerlink" title="ActityNavigator"></a>ActityNavigator</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">//一开始对Navigator.Name注解 传入参数“activity”</span></span><br><span class="line"><span class="comment">//也就是说name注解将不同的Navigator来进行区别，用于不同的控制器操作</span></span><br><span class="line"><span class="meta">@Navigator</span>.Name(<span class="string">"activity"</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">//在ActivityNavigator.Destination中，暴露了一些方法，用来收集页面信息，来构建出Intent对象</span></span><br><span class="line"><span class="comment">//---------↓-----------------//</span></span><br><span class="line"> <span class="meta">@NonNull</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Destination <span class="title">setComponentName</span><span class="params">(@Nullable ComponentName name)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (mIntent == <span class="keyword">null</span>) &#123;</span><br><span class="line">                mIntent = <span class="keyword">new</span> Intent();</span><br><span class="line">            &#125;</span><br><span class="line">            mIntent.setComponent(name);</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        ....</span><br><span class="line"> <span class="meta">@NonNull</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Destination <span class="title">setAction</span><span class="params">(@Nullable String action)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (mIntent == <span class="keyword">null</span>) &#123;</span><br><span class="line">                mIntent = <span class="keyword">new</span> Intent();</span><br><span class="line">            &#125;</span><br><span class="line">            mIntent.setAction(action);</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        ...</span><br><span class="line"> <span class="meta">@NonNull</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Destination <span class="title">setData</span><span class="params">(@Nullable Uri data)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (mIntent == <span class="keyword">null</span>) &#123;</span><br><span class="line">                mIntent = <span class="keyword">new</span> Intent();</span><br><span class="line">            &#125;</span><br><span class="line">            mIntent.setData(data);</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="FragmentNavigator源码"><a href="#FragmentNavigator源码" class="headerlink" title="FragmentNavigator源码"></a>FragmentNavigator源码</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">@Navigator</span>.Name(<span class="string">"fragment"</span>)</span><br><span class="line">.....</span><br><span class="line"></span><br><span class="line"><span class="comment">//跳转方法</span></span><br><span class="line"> <span class="meta">@Nullable</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> NavDestination <span class="title">navigate</span><span class="params">(@NonNull Destination destination, @Nullable Bundle args,</span></span></span><br><span class="line"><span class="function"><span class="params">            @Nullable NavOptions navOptions, @Nullable Navigator.Extras navigatorExtras)</span> </span>&#123;</span><br><span class="line">    		....</span><br><span class="line">    		<span class="comment">//获取到Fragment的类名</span></span><br><span class="line">    		 String className = destination.getClassName();</span><br><span class="line">    		 <span class="comment">//获取到Fragment的全路径</span></span><br><span class="line">    		 className = mContext.getPackageName() + className;</span><br><span class="line">    		 <span class="comment">//通过类名来创建即将跳转的Fragment</span></span><br><span class="line">    		  <span class="keyword">final</span> Fragment frag = instantiateFragment(mContext, mFragmentManager,</span><br><span class="line">                className, args);</span><br><span class="line">    		  <span class="comment">//设置需要传递的参数</span></span><br><span class="line">             frag.setArguments(args);</span><br><span class="line">             <span class="comment">//这里需要注意的是调用的replace将会导致Fragment的生命周期重启</span></span><br><span class="line">             ft.replace(mContainerId, frag);	</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="NavGraphNavigator源码"><a href="#NavGraphNavigator源码" class="headerlink" title="NavGraphNavigator源码"></a>NavGraphNavigator源码</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//需要注意的是，这里创建的不是Desination，而是NavGraph</span></span><br><span class="line"><span class="comment">// NavGraph extends NavDestination</span></span><br><span class="line"> <span class="meta">@NonNull</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> NavGraph <span class="title">createDestination</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> NavGraph(<span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NavGraph</span> <span class="keyword">extends</span> <span class="title">NavDestination</span> <span class="keyword">implements</span> <span class="title">Iterable</span>&lt;<span class="title">NavDestination</span>&gt; </span>&#123;</span><br><span class="line">    <span class="meta">@SuppressWarnings</span>(<span class="string">"WeakerAccess"</span>) <span class="comment">/* synthetic access */</span></span><br><span class="line">    <span class="comment">//页面节点</span></span><br><span class="line">    <span class="keyword">final</span> SparseArrayCompat&lt;NavDestination&gt; mNodes = <span class="keyword">new</span> SparseArrayCompat&lt;&gt;();</span><br><span class="line">    <span class="comment">//开始节点的Id，也就是我们在Graph中设置的app:startDestination="@id/navHostFragment"</span></span><br><span class="line">    <span class="comment">//当navigation.xml资源文件被解析时创建mStartDestId</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> mStartDestId;</span><br><span class="line">    <span class="keyword">private</span> String mStartDestIdName;</span><br></pre></td></tr></table></figure>
+
+<h2 id="NavGraph创建流程"><a href="#NavGraph创建流程" class="headerlink" title="NavGraph创建流程"></a>NavGraph创建流程</h2><h3 id="NavController源码"><a href="#NavController源码" class="headerlink" title="NavController源码"></a>NavController源码</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">//通过setGraph将graphResId传入进来 </span></span><br><span class="line"><span class="comment">//通过getNavInflater().inflate(graphResId)解析资源文件</span></span><br><span class="line">   <span class="meta">@CallSuper</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setGraph</span><span class="params">(@NavigationRes <span class="keyword">int</span> graphResId, @Nullable Bundle startDestinationArgs)</span> </span>&#123;</span><br><span class="line">       setGraph(getNavInflater().inflate(graphResId), startDestinationArgs);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">//返回NavGraph对象</span></span><br><span class="line">   <span class="comment">//NavGraph包含了页面节点等数据</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> NavGraph <span class="title">inflate</span><span class="params">(@NavigationRes <span class="keyword">int</span> graphResId)</span> </span>&#123;</span><br><span class="line">    	<span class="comment">//获取到资源文件夹</span></span><br><span class="line">    	Resources res = mContext.getResources();</span><br><span class="line">    	<span class="comment">//通过Id获取到Graph的XML资源文件</span></span><br><span class="line">       XmlResourceParser parser = res.getXml(graphResId);</span><br><span class="line">       <span class="comment">//在通过asAttributeSet方法获取到XML中的资源的属性</span></span><br><span class="line">       <span class="keyword">final</span> AttributeSet attrs = Xml.asAttributeSet(parser);</span><br><span class="line">       ...</span><br><span class="line">       <span class="comment">//通过参数来创建出destination对象</span></span><br><span class="line">        NavDestination destination = inflate(res, parser, attrs, graphResId);</span><br><span class="line">        ...</span><br><span class="line">        <span class="comment">//这里判断了XML中的根节点是否为navigation节点，否则会抛出异常</span></span><br><span class="line">        <span class="keyword">if</span> (!(destination <span class="keyword">instanceof</span> NavGraph)) &#123;</span><br><span class="line">               <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Root element &lt;"</span> + rootElement + <span class="string">"&gt;"</span></span><br><span class="line">                       + <span class="string">" did not inflate into a NavGraph"</span>);</span><br><span class="line">           &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@NonNull</span></span><br><span class="line">   <span class="function"><span class="keyword">private</span> NavDestination <span class="title">inflate</span><span class="params">(@NonNull Resources res, @NonNull XmlResourceParser parser,</span></span></span><br><span class="line"><span class="function"><span class="params">           @NonNull AttributeSet attrs, <span class="keyword">int</span> graphResId)</span></span></span><br><span class="line"><span class="function">           <span class="keyword">throws</span> XmlPullParserException, IOException </span>&#123;</span><br><span class="line"></span><br><span class="line">           	<span class="comment">//通过NavigatorProvider.getNavigator方法，传入name注解参数，来判断Navigator的种类</span></span><br><span class="line">       Navigator navigator = mNavigatorProvider.getNavigator(parser.getName());</span><br><span class="line">       <span class="comment">//创建NavDestination(页面节点)</span></span><br><span class="line">       <span class="keyword">final</span> NavDestination dest = navigator.createDestination();</span><br><span class="line">       ....逻辑判断（判断标签属性，获取参数）....</span><br><span class="line">       <span class="comment">//如果参数是NavGraph类型，则会调用addDestination</span></span><br><span class="line">       <span class="comment">//并且通过inflate方法继续创建Destination(递归调用)将graph中的对象的Destination节点，全部添加到NavGraph中</span></span><br><span class="line">        <span class="keyword">if</span> (dest <span class="keyword">instanceof</span> NavGraph) &#123;</span><br><span class="line">               ((NavGraph) dest).addDestination(inflate(res, parser, attrs, graphResId));</span><br><span class="line"></span><br><span class="line">               <span class="comment">//addDestination方法中&#123;</span></span><br><span class="line">               <span class="comment">//也就是添加到了mNodes数组中</span></span><br><span class="line">               <span class="comment">//然后添加到NavigatorProvider(HashMap)中，key为Name注解(Navator的类型)value为mNodes节点(页面节点)</span></span><br><span class="line">				mNodes.put(node.getId(), node);</span><br><span class="line"></span><br><span class="line">           <span class="comment">//&#125;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">           &#125;</span><br><span class="line">       <span class="comment">//Return出去</span></span><br><span class="line">	<span class="keyword">return</span> dest;</span><br></pre></td></tr></table></figure>
+
+<p>}</p>
+<p>)</p>
+]]></content>
+      <tags>
+        <tag>Android Jetpack</tag>
+      </tags>
+  </entry>
+</search>

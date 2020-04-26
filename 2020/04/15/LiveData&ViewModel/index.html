@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    LiveData&amp;ViewModel |  Hexo
+  </title>
+  <meta name="generator" content="hexo-theme-yilia-plus">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+  
+  
+
+  
+
+<link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    <main class="content on">
+      <section class="outer">
+  <article id="post-LiveData&amp;ViewModel" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  LiveData&amp;ViewModel
+</h1>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/04/15/LiveData&ViewModel/" class="article-date">
+  <time datetime="2020-04-15T06:32:04.000Z" itemprop="datePublished">2020-04-15</time>
+</a>
+      
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">2k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">8 min</span>
+        </span>
+    </span>
+</div>
+
+      
+    </div>
+    
+
+    
+    
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p><img src="https://upload-images.jianshu.io/upload_images/9271486-0182c64db18e4e98.png" alt="目录"></p>
+<p>目录<br>一、LiveData<br>友情提醒：<br>官方文档：LiveData</p>
+<p>在讲LiveData之前，我们先看看LiveData和ViewModel的作用：<br>LiveData和ViewModel的作用</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/9271486-93980cb4a2458d6d.png" alt="用力图"></p>
+<p>从这一张图，我们可以看出ViewModel和LiveData在整个MVVM架构中担当数据驱动的职责，这也是MVVM模式中ViewModel层的作用。</p>
+<ol>
+<li>介绍<br>看了上面的图，对于LiveData我们还是感到疑惑，那么我们看看官网是如何定义的：</li>
+</ol>
+<p>LiveData is an observable data holder class. Unlike a regular observable, LiveData is lifecycle-aware, meaning it respects the lifecycle of other app components, such as activities, fragments, or services.</p>
+<p>从官网的介绍可以看到，LiveData作用跟RxJava类似，是观察数据的类，相比RxJava，它能够在Activity、Fragment和Service之中正确的处理生命周期。那么LiveData有什么优点呢？</p>
+<p>数据变更的时候更新UI<br>没有内存泄漏<br>不会因为停止Activity崩溃<br>无需手动处理生命周期<br>共享资源<br>乍看之下LiveData挺鸡肋的，事实也确实如此，因为LiveData能够实现的功能RxJava也可以实现，而且与LiveData相比，RxJava拥有着更加丰富的生态，当然，谷歌的官方架构仍然值得我们去学习。</p>
+<ol start="2">
+<li>使用方式<br>LiveData常用的方法也就如下几个：</li>
+</ol>
+<p>方法名    作用<br>observe(@NonNull LifecycleOwner owner, @NonNull Observer&lt;? super T&gt; observer)    最常用的方法，需要提供Observer处理数据变更后的处理。LifecycleOwner则是我们能够正确处理声明周期的关键！<br>setValue(T value)    设置数据<br>getValue():T    获取数据<br>postValue(T value)    在主线程中更新数据<br>3. 使用场景<br>我看见绝大部分的LiveData都是配合其他Android Jetpack组件使用的，具体情况具体分析。</p>
+<p>ViewModel: 见下文。<br>Room：先参考Demo，文章后续推出。<br>二、ViewModel<br>友情提醒：<br>官方文档：ViewModel<br>谷歌实验室：教程<br>谷歌官方Demo地址：<a href="https://github.com/googlecodelabs/android-lifecycles">https://github.com/googlecodelabs/android-lifecycles</a></p>
+<p>众所周知，MVVM层中ViewModel层用来作逻辑处理的，那么我们Android Jetpack组件中ViewModel的作用是否也一致呢？</p>
+<ol>
+<li>介绍<br>我们先来看官网的介绍：</li>
+</ol>
+<p>The ViewModel class is designed to store and manage UI-related data in a lifecycle conscious way. The ViewModel class allows data to survive configuration changes such as screen rotations.</p>
+<p>ViewModel同样具有生命周期意识的处理跟UI相关的数据，并且，当设备的一些配置信息改变（例如屏幕旋转）它的数据不会消失。</p>
+<p>通常情况下，如果我们不做特殊处理，当屏幕旋转的时候，数据会消失，那ViewModel管理的数据为什么不会消失呢，是因为ViewModel的生命周期：<br>ViewModel的生命周期<br><img src="https://upload-images.jianshu.io/upload_images/9271486-affb4a4c1b588208.png" alt="ViewModel生命周期"><br>ViewModel的另一个特点就是同一个Activity的Fragment之间可以使用ViewModel实现共享数据。</p>
+<ol start="2">
+<li><p>使用方法<br>继承ViewModel即可。</p>
+</li>
+<li><p>实战<br>第一步：添加依赖<br>添加进module下面的build.gradle：</p>
+</li>
+</ol>
+<p>ext.lifecycleVersion = ‘2.2.0-alpha01’<br>dependencies {<br>    //…</p>
+<pre><code>// liveData
+implementation &quot;androidx.lifecycle:lifecycle-livedata-ktx:$rootProject.lifecycleVersion&quot;
+// viewModel
+implementation &quot;androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.lifecycleVersion&quot;
+implementation &quot;androidx.lifecycle:lifecycle-extensions:$rootProject.lifecycleVersion&quot;</code></pre><p>}<br>第二步：创建ShoeModel<br>继承ViewModel类，分别创建对品牌名的观察对象brand:MutableLiveData<String>和对鞋子集合的观察对象shoes: LiveData&lt;List<Shoe>&gt;：</p>
+<p>class ShoeModel constructor(shoeRepository: ShoeRepository) : ViewModel() {</p>
+<pre><code>// 品牌的观察对象 默认观察所有的品牌
+private val brand = MutableLiveData&lt;String&gt;().apply {
+    value = ALL
+}
+
+// 鞋子集合的观察类
+val shoes: LiveData&lt;List&lt;Shoe&gt;&gt; = brand.switchMap {
+    // Room数据库查询，只要知道返回的是LiveData&lt;List&lt;Shoe&gt;&gt;即可
+    if (it == ALL) {
+        shoeRepository.getAllShoes()
+    } else {
+        shoeRepository.getShoesByBrand(it)
+    }
+}
+
+//... 不重要的函数省略
+
+companion object {
+    private const val ALL = &quot;所有&quot;
+}</code></pre><p>}<br>第三步：获取ViewModel<br>无构造参数获取：<br>构造函数没有参数的情况下，获取ShoeModel很简单，ViewModelProviders.of(this).get(ShoeModel::class.java)这样就可以返回一个我们需要的ShoeModel了。<br>有构造参数获取<br>不过，上面的ShoeModel中我们在构造函数中需要一个ShoeRepository参数，上述方法是显然行不通的，这种情况下我们需要自定义实现Factory：</p>
+<p>class ShoeModelFactory(<br>    private val repository: ShoeRepository<br>) : ViewModelProvider.NewInstanceFactory() {<br>    override fun &lt;T : ViewModel?&gt; create(modelClass: Class<T>): T {<br>        return ShoeModel(repository) as T<br>    }<br>}<br>为了使用方便，又写了一个工具类CustomViewModelProvider：</p>
+<p>object CustomViewModelProvider {</p>
+<pre><code>// ...省略无关代码
+
+fun providerShoeModel(context: Context):ShoeModelFactory{
+    val repository:ShoeRepository = RepositoryProvider.providerShoeRepository(context)
+    return ShoeModelFactory(repository)
+}</code></pre><p>}<br>最后在ShoeFragment中获取：</p>
+<pre><code>// by viewModels 需要依赖 &quot;androidx.navigation:navigation-ui-ktx:$rootProject.navigationVersion&quot;
+private val viewModel: ShoeModel by viewModels {
+    CustomViewModelProvider.providerShoeModel(requireContext())
+}</code></pre><p>第四步：使用ViewModel<br>ViewModel的使用需要结合具体的业务，比如我这里的ShoeModel，因为ShoeFragment的代码不多，我直接贴出来：</p>
+<p>/**</p>
+<ul>
+<li><p>鞋子集合的Fragment</p>
+</li>
+<li></li>
+<li><p>/<br>class ShoeFragment : Fragment() {</p>
+<p>  // by viewModels 需要依赖 “androidx.navigation:navigation-ui-ktx:$rootProject.navigationVersion”<br>  private val viewModel: ShoeModel by viewModels {</p>
+<pre><code>CustomViewModelProvider.providerShoeModel(requireContext())</code></pre><p>  }</p>
+<p>  override fun onCreateView(</p>
+<pre><code>inflater: LayoutInflater, container: ViewGroup?,
+savedInstanceState: Bundle?</code></pre><p>  ): View? {</p>
+<pre><code>val binding: FragmentShoeBinding = FragmentShoeBinding.inflate(inflater, container, false)
+context ?: return binding.root
+ViewModelProviders.of(this).get(ShoeModel::class.java)
+// RecyclerView 的适配器 ShoeAdapter
+val adapter = ShoeAdapter()
+binding.recycler.adapter = adapter
+onSubscribeUi(adapter)
+return binding.root</code></pre><p>  }</p>
+<p>  /**</p>
+<ul>
+<li>鞋子数据更新的通知</li>
+<li>/<br>private fun onSubscribeUi(adapter: ShoeAdapter) {<br>  viewModel.shoes.observe(viewLifecycleOwner, Observer {<pre><code>if (it != null) {
+    adapter.submitList(it)
+}</code></pre>  })<br>}<br>}<br>在onSubscribeUi方法中，我们使用ShoeModel的LiveData进行了观察通知，当鞋子集合更新的时候，会更新到当前RecyclerView中的适配器。</li>
+</ul>
+</li>
+</ul>
+<p>布局文件fragment_shoe.xml很简单，虽使用了Data Binding，但是没有变量，且只有一个RecyclerView，这里不再赘述。ShoeAdapter的实现同样简单，感兴趣的可以查看源码，这里同样不再赘述。</p>
+<p>这样写完之后，本文一开始的图的效果就出现了~</p>
+<p>三、更多<br>一个例子并不能展现所有的关于LiveData和ViewModel的内容。LiveData和ViewModel仍有一些知识需要我们注意。</p>
+<ol>
+<li>LiveData数据变换<br>LiveData中数据变换方法有map()和switchMap()，关于switchMap()，我在上面实战的ShoeModel已经实践过了：</li>
+</ol>
+<p>// 本地数据仓库<br>class ShoeRepository private constructor(private val shoeDao: ShoeDao) {</p>
+<pre><code>fun getAllShoes() = shoeDao.getAllShoes()
+
+/**
+ * 通过品牌查询鞋子 返回 LiveData&lt;List&lt;Shoe&gt;&gt;
+ */
+fun getShoesByBrand(brand:String) = shoeDao.findShoeByBrand(brand)
+
+/**
+ * 插入鞋子的集合 返回 LiveData&lt;List&lt;Shoe&gt;&gt;
+ */
+fun insertShoes(shoes: List&lt;Shoe&gt;) = shoeDao.insertShoes(shoes)
+
+// ... 单例省略</code></pre><p>}</p>
+<p>class ShoeModel constructor(shoeRepository: ShoeRepository) : ViewModel() {</p>
+<pre><code>// 品牌的观察对象 默认观察所有的品牌
+private val brand = MutableLiveData&lt;String&gt;().apply {
+    value = ALL
+}
+
+// 鞋子集合的观察类
+val shoes: LiveData&lt;List&lt;Shoe&gt;&gt; = brand.switchMap {
+    // Room数据库查询，只要知道返回的是LiveData&lt;List&lt;Shoe&gt;&gt;即可
+    if (it == ALL) {
+        shoeRepository.getAllShoes()
+    } else {
+        shoeRepository.getShoesByBrand(it)
+    }
+}</code></pre><p>}<br>map()的使用我们借用官方的例子：</p>
+<p>val userLiveData: LiveData<User> = UserLiveData()<br>val userName: LiveData<String> = Transformations.map(userLiveData) {<br>    user -&gt; “${user.name} ${user.lastName}”<br>}<br>可以看到，map()同样可以实现将A变成B，那么switchMap()和map()的区别是什么？map()中只有一个LiveData<A>，他是在LiveData<A>发送数据的时候把A变成B，而switchMap()中同时存在LiveData<A>和LiveData<B>，LiveData<A>更新之后通知LiveData<B>更新。</p>
+<ol start="2">
+<li>LiveData如何共享数据<br>假设我们有这样的需求：注册页需要记录信息，注册完成跳转到登录页，并将账号和密码显示在登录页。这种情况下，我们可以定义一个类然后继承LiveData，并使用单例模式即可：</li>
+</ol>
+<p>// 登录信息<br>data class LoginInfo constructor(val account:String, val pwd:String, val email:String)</p>
+<p>/**</p>
+<ul>
+<li><p>自定义单例LiveData</p>
+</li>
+<li><p>/<br>class LoginLiveData:LiveData<LoginInfo>() {</p>
+<p>  companion object {</p>
+<pre><code>private lateinit var sInstance: LoginLiveData
+
+@MainThread
+fun get(): LoginLiveData {
+    sInstance = if (::sInstance.isInitialized) sInstance else LoginLiveData()
+    return sInstance
+}</code></pre><p>  }<br>}<br>需要实例的时候用单例创建即可。</p>
+</li>
+</ul>
+<ol start="3">
+<li>使用ViewModel在同一个Activity中的Fragment之间共享数据<br>想要利用ViewModel实现Fragment之间数据共享，前提是Fragment中的FragmentActivity得相同，这里直接贴上官方的代码：</li>
+</ol>
+<p>class SharedViewModel : ViewModel() {<br>    val selected = MutableLiveData<Item>()</p>
+<pre><code>fun select(item: Item) {
+    selected.value = item
+}</code></pre><p>}</p>
+<p>class MasterFragment : Fragment() {</p>
+<pre><code>private lateinit var itemSelector: Selector
+
+private lateinit var model: SharedViewModel
+
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    model = activity?.run {
+        ViewModelProviders.of(this).get(SharedViewModel::class.java)
+    } ?: throw Exception(&quot;Invalid Activity&quot;)
+    itemSelector.setOnClickListener { item -&gt;
+        // Update the UI
+    }
+}</code></pre><p>}</p>
+<p>class DetailFragment : Fragment() {</p>
+<pre><code>private lateinit var model: SharedViewModel
+
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    model = activity?.run {
+        ViewModelProviders.of(this).get(SharedViewModel::class.java)
+    } ?: throw Exception(&quot;Invalid Activity&quot;)
+    model.selected.observe(this, Observer&lt;Item&gt; { item -&gt;
+        // Update the UI
+    })
+}</code></pre><p>}<br>四、总结<br><img src="https://upload-images.jianshu.io/upload_images/9271486-f1370a76e4e189bd.png" alt="总结"></p>
+<p>作者：TeaOf<br>链接：<a href="https://www.jianshu.com/p/81a284969f03" target="_blank" rel="noopener">https://www.jianshu.com/p/81a284969f03</a><br>来源：简书<br>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</p>
+
+      
+      <!-- reward -->
+      
+      <div id="reward-btn">
+        Reward
+      </div>
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+        <div class="declare">
+          <ul class="post-copyright">
+            <li>
+              <i class="ri-copyright-line"></i>
+              <strong>Copyright： </strong>
+              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+            </li>
+          </ul>
+        </div>
+        
+    <footer class="article-footer">
+      
+          
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://github.com/SkyMajo/SkyMajo.github.io.git/2020/04/15/LiveData&ViewModel/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android-Jetpack/" rel="tag">Android Jetpack</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+  
+  <nav class="article-nav">
+    
+      <a href="/2020/04/15/DataBinding%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            DataBinding简单使用
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2020/04/15/hello-world/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Hello World</div>
+      </a>
+    
+  </nav>
+
+
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: '',
+        app_key: '',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'monsterid',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+  
+  
+
+</article>
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul class="list-inline">
+      <li>
+        &copy;
+        2020
+        John Doe
+      </li>
+      <li>
+        
+      </li>
+    </ul>
+    <ul class="list-inline">
+      <li>
+        
+        
+        <span>
+  <i>PV:<span id="busuanzi_value_page_pv"></span></i>
+  <i>UV:<span id="busuanzi_value_site_uv"></span></i>
+</span>
+        
+      </li>
+      
+      <li>
+        <!-- cnzz统计 -->
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="Hexo"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="Search">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+<script>
+  try {
+    var typed = new Typed("#subtitle", {
+      strings: ['SkyMajo', '', ''],
+      startDelay: 0,
+      typeSpeed: 200,
+      loop: true,
+      backSpeed: 100,
+      showCursor: true
+    });
+  } catch (err) {
+  }
+
+</script>
+
+
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+
+
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+
+<script type="text/javascript" src="https://js.users.51.la/20544303.js"></script>
+
+
+<!-- 复制 -->
+
+  
+<link rel="stylesheet" href="/css/clipboard.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+    
+  </div>
+</body>
+
+</html>
