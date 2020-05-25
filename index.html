@@ -85,7 +85,7 @@
        
 <h2 itemprop="name">
   <a class="article-title" href="/2020/05/18/%E4%BB%8EPaging%E4%BA%86%E8%A7%A3LiveData%E6%A1%86%E6%9E%B6%E5%8E%9F%E7%90%86Ver.1/"
-    >从Paging了解LiveData框架原理 Ver.1</a> 
+    >paging框架工作原理与LiveData密不可分的关系</a> 
 </h2>
  
 
@@ -174,6 +174,9 @@
 <li>随后DataSource调用invalidate()方法，将DataSource注销掉，以后也不可以再次使用</li>
 </ol>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">    * Signal the data source to stop loading, and notify its callback.</span></span><br><span class="line"><span class="comment">    * &lt;p&gt;</span></span><br><span class="line"><span class="comment">    * If invalidate has already been called, this method does nothing.</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="meta">@AnyThread</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">invalidate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">       <span class="keyword">if</span> (mInvalid.compareAndSet(<span class="keyword">false</span>, <span class="keyword">true</span>)) &#123;</span><br><span class="line">       	<span class="comment">//使每一个callback调用onInvalidated方法</span></span><br><span class="line">           <span class="keyword">for</span> (InvalidatedCallback callback : mOnInvalidatedCallbacks) &#123;</span><br><span class="line">               callback.onInvalidated();</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>#总结<br><img src="https://i.loli.net/2020/05/25/xvnztb9ZFgqGrf4.png" alt="pagding框架工作原理流程图"></p>
 
       
       <!-- reward -->
