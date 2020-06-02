@@ -502,7 +502,7 @@ override fun onCreate(savedInstanceState: Bundle?) {
 <h2 id="通过上面的分析，我们可以看出，同一个Bitmap写入到Parcel所占的缓冲区大笑和Pacel的allowFds有关。"><a href="#通过上面的分析，我们可以看出，同一个Bitmap写入到Parcel所占的缓冲区大笑和Pacel的allowFds有关。" class="headerlink" title="通过上面的分析，我们可以看出，同一个Bitmap写入到Parcel所占的缓冲区大笑和Pacel的allowFds有关。"></a>通过上面的分析，我们可以看出，同一个Bitmap写入到Parcel所占的缓冲区大笑和Pacel的allowFds有关。</h2><p>通过直接Intent传Bitmap容易抛TransactionTooLargeException异常就是因为Parcel的allowFds = false，直接把Bitmap写入缓冲区占用了较大的内存。</p>
 <h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><h2 id="较大的Bitmap通过Intent传递容易抛异常是因为Intent启动组件时，系统禁掉了文件描述符fd机制，bitmap无法利用共享内存，只能拷贝到Biner映射的缓冲区，导致缓冲区超限，出发异常，而通过putBinder的方式避免了Intent禁用描述符的影响，bitmap写parcel时的allowFds默认是true，可以利用共享内存，所以能高效传递图片。"><a href="#较大的Bitmap通过Intent传递容易抛异常是因为Intent启动组件时，系统禁掉了文件描述符fd机制，bitmap无法利用共享内存，只能拷贝到Biner映射的缓冲区，导致缓冲区超限，出发异常，而通过putBinder的方式避免了Intent禁用描述符的影响，bitmap写parcel时的allowFds默认是true，可以利用共享内存，所以能高效传递图片。" class="headerlink" title="较大的Bitmap通过Intent传递容易抛异常是因为Intent启动组件时，系统禁掉了文件描述符fd机制，bitmap无法利用共享内存，只能拷贝到Biner映射的缓冲区，导致缓冲区超限，出发异常，而通过putBinder的方式避免了Intent禁用描述符的影响，bitmap写parcel时的allowFds默认是true，可以利用共享内存，所以能高效传递图片。"></a>较大的Bitmap通过Intent传递容易抛异常是因为Intent启动组件时，系统禁掉了文件描述符fd机制，bitmap无法利用共享内存，只能拷贝到Biner映射的缓冲区，导致缓冲区超限，出发异常，而通过putBinder的方式避免了Intent禁用描述符的影响，bitmap写parcel时的allowFds默认是true，可以利用共享内存，所以能高效传递图片。</h2>]]></content>
       <tags>
-        <tag>Android Jetpack</tag>
+        <tag>面试QA</tag>
       </tags>
   </entry>
 </search>
