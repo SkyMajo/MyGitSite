@@ -37,232 +37,7 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-跨进程传递大图的方案" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  跨进程传递大图的方案
-</h1>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/06/02/%E8%B7%A8%E8%BF%9B%E7%A8%8B%E4%BC%A0%E9%80%92%E5%A4%A7%E5%9B%BE%E7%9A%84%E6%96%B9%E6%A1%88/" class="article-date">
-  <time datetime="2020-06-02T02:18:10.385Z" itemprop="datePublished">2020-06-02</time>
-</a>
-      
-      
-      
-<div class="word_count">
-    <span class="post-time">
-        <span class="post-meta-item-icon">
-            <i class="ri-quill-pen-line"></i>
-            <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">833</span>
-        </span>
-    </span>
-
-    <span class="post-time">
-        &nbsp; | &nbsp;
-        <span class="post-meta-item-icon">
-            <i class="ri-book-open-line"></i>
-            <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">3 min</span>
-        </span>
-    </span>
-</div>
-
-      
-    </div>
-    
-
-    
-    
-    <div class="tocbot"></div>
-
-
-
-
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h1 id="Q：如何跨进程传递大图"><a href="#Q：如何跨进程传递大图" class="headerlink" title="Q：如何跨进程传递大图"></a>Q：如何跨进程传递大图</h1><h2 id="A：1-通过文件存储方式传递-但是这样使用文件读写方式会导致效率不够好。"><a href="#A：1-通过文件存储方式传递-但是这样使用文件读写方式会导致效率不够好。" class="headerlink" title="A：1.通过文件存储方式传递,但是这样使用文件读写方式会导致效率不够好。"></a>A：1.通过文件存储方式传递,但是这样使用文件读写方式会导致效率不够好。</h2><h2 id="A-2-Bitmap实现了Parceable接口，可以通过Intent-putExtra-String-name-Parceable-value-方法传递，但是太大会抛出TransactionTooLarge异常，因为底层判断Bitmap-Transaction-失败且Intent的数据大于200K就会抛出这个异常了。"><a href="#A-2-Bitmap实现了Parceable接口，可以通过Intent-putExtra-String-name-Parceable-value-方法传递，但是太大会抛出TransactionTooLarge异常，因为底层判断Bitmap-Transaction-失败且Intent的数据大于200K就会抛出这个异常了。" class="headerlink" title="A: 2.Bitmap实现了Parceable接口，可以通过Intent.putExtra(String name , Parceable value)方法传递，但是太大会抛出TransactionTooLarge异常，因为底层判断Bitmap Transaction 失败且Intent的数据大于200K就会抛出这个异常了。"></a>A: 2.Bitmap实现了Parceable接口，可以通过Intent.putExtra(String name , Parceable value)方法传递，但是太大会抛出TransactionTooLarge异常，因为底层判断Bitmap Transaction 失败且Intent的数据大于200K就会抛出这个异常了。</h2><h1 id="Q：为什么Intent传递值会有大小限制"><a href="#Q：为什么Intent传递值会有大小限制" class="headerlink" title="Q：为什么Intent传递值会有大小限制"></a>Q：为什么Intent传递值会有大小限制</h1><h2 id="A：-应用再启动binder机制的时候回映射1M的内存缓冲区，所有正在进行的Binder事物共享这1M的缓冲区，当使用IPC时申请的缓存超过1M-其他事物占用内存时就会失败抛出TransactionTooLarge异常。"><a href="#A：-应用再启动binder机制的时候回映射1M的内存缓冲区，所有正在进行的Binder事物共享这1M的缓冲区，当使用IPC时申请的缓存超过1M-其他事物占用内存时就会失败抛出TransactionTooLarge异常。" class="headerlink" title="A： 应用再启动binder机制的时候回映射1M的内存缓冲区，所有正在进行的Binder事物共享这1M的缓冲区，当使用IPC时申请的缓存超过1M - 其他事物占用内存时就会失败抛出TransactionTooLarge异常。"></a>A： 应用再启动binder机制的时候回映射1M的内存缓冲区，所有正在进行的Binder事物共享这1M的缓冲区，当使用IPC时申请的缓存超过1M - 其他事物占用内存时就会失败抛出TransactionTooLarge异常。</h2><h1 id="Q：如何绕过这个异常呢"><a href="#Q：如何绕过这个异常呢" class="headerlink" title="Q：如何绕过这个异常呢"></a>Q：如何绕过这个异常呢</h1><h2 id="A：可以使用如下代码"><a href="#A：可以使用如下代码" class="headerlink" title="A：可以使用如下代码"></a>A：可以使用如下代码</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">Bunder bunder &#x3D; new Bunder();</span><br><span class="line">bunder.putBinder(&quot;binder&quot;,new IRemoteGetBitmap.Stub()&#123;</span><br><span class="line"></span><br><span class="line">	@Override</span><br><span class="line">	public Bitmap getBitmap() throws RemoteException&#123;</span><br><span class="line">		return mBitmap;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	&#125;);</span><br><span class="line"></span><br><span class="line">	intent.putExtras(bundle);</span><br></pre></td></tr></table></figure>
-
-<h1 id="Q-为什么putBunder的方式传Bitmap不会抛TranscationTooLargeExcaption异常"><a href="#Q-为什么putBunder的方式传Bitmap不会抛TranscationTooLargeExcaption异常" class="headerlink" title="Q:为什么putBunder的方式传Bitmap不会抛TranscationTooLargeExcaption异常"></a>Q:为什么putBunder的方式传Bitmap不会抛TranscationTooLargeExcaption异常</h1><h2 id="A：底层在IPC时把Bitmap写进Parcel的源码"><a href="#A：底层在IPC时把Bitmap写进Parcel的源码" class="headerlink" title="A：底层在IPC时把Bitmap写进Parcel的源码"></a>A：底层在IPC时把Bitmap写进Parcel的源码</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">Android - <span class="number">28</span> Bitmap.cpp</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> jboolean <span class="title">Bitmap_writeToParcel</span><span class="params">(JNIEnv* env, jobject, ...)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 拿到 Native 的 Bitmap                                </span></span><br><span class="line">    <span class="keyword">auto</span> bitmapWrapper = <span class="keyword">reinterpret_cast</span>&lt;BitmapWrapper*&gt;(bitmapHandle);</span><br><span class="line">    <span class="comment">// 拿到其对应的 SkBitmap, 用于获取 Bitmap 的像素信息</span></span><br><span class="line">    bitmapWrapper-&gt;getSkBitmap(&amp;bitmap);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> fd = bitmapWrapper-&gt;bitmap().getAshmemFd();</span><br><span class="line">    <span class="keyword">if</span> (fd &gt;= <span class="number">0</span> &amp;&amp; !isMutable &amp;&amp; p-&gt;allowFds()) &#123;</span><br><span class="line">        <span class="comment">// Bitmap 带了 ashmemFd &amp;&amp; Bitmap 不可修改 &amp;&amp; Parcel 允许带 fd</span></span><br><span class="line">        <span class="comment">// 就直接把 FD 写到 Parcel 里，结束。</span></span><br><span class="line">        status = p-&gt;writeDupImmutableBlobFileDescriptor(fd);</span><br><span class="line">        <span class="keyword">return</span> JNI_TRUE;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 不满足上面的条件就要把 Bitmap 拷贝到一块新的缓冲区</span></span><br><span class="line">    android::Parcel::WritableBlob blob;</span><br><span class="line">    <span class="comment">// 通过 writeBlob 拿到一块缓冲区 blob</span></span><br><span class="line">    status = p-&gt;writeBlob(<span class="built_in">size</span>, mutableCopy, &amp;blob);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取像素信息并写到前面拿到缓冲区 blob</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">void</span>* pSrc =  bitmap.getPixels();</span><br><span class="line">    <span class="keyword">if</span> (pSrc == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="built_in">memset</span>(blob.data(), <span class="number">0</span>, <span class="built_in">size</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">memcpy</span>(blob.data(), pSrc, <span class="built_in">size</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="然后看一下writeBlob是怎么获取缓冲区的，writeBlob虽然方法名字写着whrite，但写入操作是在writeBlob方法之后进行处理的"><a href="#然后看一下writeBlob是怎么获取缓冲区的，writeBlob虽然方法名字写着whrite，但写入操作是在writeBlob方法之后进行处理的" class="headerlink" title="然后看一下writeBlob是怎么获取缓冲区的，writeBlob虽然方法名字写着whrite，但写入操作是在writeBlob方法之后进行处理的"></a>然后看一下writeBlob是怎么获取缓冲区的，writeBlob虽然方法名字写着whrite，但写入操作是在writeBlob方法之后进行处理的</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">Android - <span class="number">28</span> Parcel.cpp</span><br><span class="line"><span class="comment">// Maximum size of a blob to transfer in-place.</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="keyword">size_t</span> BLOB_INPLACE_LIMIT = <span class="number">16</span> * <span class="number">1024</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">status_t</span> <span class="title">Parcel::writeBlob</span><span class="params">(<span class="keyword">size_t</span> len, <span class="keyword">bool</span> mutableCopy, WritableBlob* outBlob)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!mAllowFds || len &lt;= BLOB_INPLACE_LIMIT) &#123;</span><br><span class="line">        <span class="comment">// 如果不允许带 fd ，或者这个数据小于 16K</span></span><br><span class="line">        <span class="comment">// 就直接在 Parcel 的缓冲区里分配一块空间来保存这个数据</span></span><br><span class="line">        status = writeInt32(BLOB_INPLACE);</span><br><span class="line">        <span class="keyword">void</span>* ptr = writeInplace(len);</span><br><span class="line">        outBlob-&gt;init(<span class="number">-1</span>, ptr, len, <span class="literal">false</span>);</span><br><span class="line">        <span class="keyword">return</span> NO_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 另外开辟一个 ashmem，映射出一块内存，后续数据将保存在 ashmem 的内存里</span></span><br><span class="line">    <span class="keyword">int</span> fd = ashmem_create_region(<span class="string">"Parcel Blob"</span>, len);</span><br><span class="line">    <span class="keyword">void</span>* ptr = ::mmap(<span class="literal">NULL</span>, len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, <span class="number">0</span>);</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// parcel 里只写个 fd 就好了，这样就算数据量很大，parcel 自己的缓冲区也不用很大</span></span><br><span class="line">    status = writeFileDescriptor(fd, <span class="literal">true</span> <span class="comment">/*takeOwnership*/</span>);</span><br><span class="line">    outBlob-&gt;init(fd, ptr, len, mutableCopy);</span><br><span class="line">    <span class="keyword">return</span> status;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="通过上面的分析，我们可以看出，同一个Bitmap写入到Parcel所占的缓冲区大笑和Pacel的allowFds有关。"><a href="#通过上面的分析，我们可以看出，同一个Bitmap写入到Parcel所占的缓冲区大笑和Pacel的allowFds有关。" class="headerlink" title="通过上面的分析，我们可以看出，同一个Bitmap写入到Parcel所占的缓冲区大笑和Pacel的allowFds有关。"></a>通过上面的分析，我们可以看出，同一个Bitmap写入到Parcel所占的缓冲区大笑和Pacel的allowFds有关。</h2><p>通过直接Intent传Bitmap容易抛TransactionTooLargeException异常就是因为Parcel的allowFds = false，直接把Bitmap写入缓冲区占用了较大的内存。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><h2 id="较大的Bitmap通过Intent传递容易抛异常是因为Intent启动组件时，系统禁掉了文件描述符fd机制，bitmap无法利用共享内存，只能拷贝到Biner映射的缓冲区，导致缓冲区超限，出发异常，而通过putBinder的方式避免了Intent禁用描述符的影响，bitmap写parcel时的allowFds默认是true，可以利用共享内存，所以能高效传递图片。"><a href="#较大的Bitmap通过Intent传递容易抛异常是因为Intent启动组件时，系统禁掉了文件描述符fd机制，bitmap无法利用共享内存，只能拷贝到Biner映射的缓冲区，导致缓冲区超限，出发异常，而通过putBinder的方式避免了Intent禁用描述符的影响，bitmap写parcel时的allowFds默认是true，可以利用共享内存，所以能高效传递图片。" class="headerlink" title="较大的Bitmap通过Intent传递容易抛异常是因为Intent启动组件时，系统禁掉了文件描述符fd机制，bitmap无法利用共享内存，只能拷贝到Biner映射的缓冲区，导致缓冲区超限，出发异常，而通过putBinder的方式避免了Intent禁用描述符的影响，bitmap写parcel时的allowFds默认是true，可以利用共享内存，所以能高效传递图片。"></a>较大的Bitmap通过Intent传递容易抛异常是因为Intent启动组件时，系统禁掉了文件描述符fd机制，bitmap无法利用共享内存，只能拷贝到Biner映射的缓冲区，导致缓冲区超限，出发异常，而通过putBinder的方式避免了Intent禁用描述符的影响，bitmap写parcel时的allowFds默认是true，可以利用共享内存，所以能高效传递图片。</h2>
-      
-      <!-- reward -->
-      
-      <div id="reward-btn">
-        Reward
-      </div>
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-        <div class="declare">
-          <ul class="post-copyright">
-            <li>
-              <i class="ri-copyright-line"></i>
-              <strong>Copyright： </strong>
-              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
-            </li>
-          </ul>
-        </div>
-        
-    <footer class="article-footer">
-      
-          
-<div class="share-btn">
-      <span class="share-sns share-outer">
-        <i class="ri-share-forward-line"></i>
-        分享
-      </span>
-      <div class="share-wrap">
-        <i class="arrow"></i>
-        <div class="share-icons">
-          
-          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
-            <i class="ri-weibo-fill"></i>
-          </a>
-          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
-            <i class="ri-wechat-fill"></i>
-          </a>
-          <a class="qq share-sns" href="javascript:;" data-type="qq">
-            <i class="ri-qq-fill"></i>
-          </a>
-          <a class="douban share-sns" href="javascript:;" data-type="douban">
-            <i class="ri-douban-line"></i>
-          </a>
-          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
-            <i class="icon icon-qzone"></i>
-          </a> -->
-          
-          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
-            <i class="ri-facebook-circle-fill"></i>
-          </a>
-          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
-            <i class="ri-twitter-fill"></i>
-          </a>
-          <a class="google share-sns" href="javascript:;" data-type="google">
-            <i class="ri-google-fill"></i>
-          </a>
-        </div>
-      </div>
-</div>
-
-<div class="wx-share-modal">
-    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
-    <p>扫一扫，分享到微信</p>
-    <div class="wx-qrcode">
-      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://github.com/SkyMajo/SkyMajo.github.io.git/2020/06/02/%E8%B7%A8%E8%BF%9B%E7%A8%8B%E4%BC%A0%E9%80%92%E5%A4%A7%E5%9B%BE%E7%9A%84%E6%96%B9%E6%A1%88/" alt="微信分享二维码">
-    </div>
-</div>
-
-<div id="share-mask"></div>
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E9%9D%A2%E8%AF%95QA/" rel="tag">面试QA</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
   
-  
-  <nav class="article-nav">
-    
-    
-      <a href="/2020/05/18/%E4%BB%8EPaging%E4%BA%86%E8%A7%A3LiveData%E6%A1%86%E6%9E%B6%E5%8E%9F%E7%90%86Ver.1/" class="article-nav-link">
-        <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">paging框架工作原理与LiveData密不可分的关系</div>
-      </a>
-    
-  </nav>
-
-
-  
-
-  
-  
-<!-- valine评论 -->
-<div id="vcomments-box">
-    <div id="vcomments">
-    </div>
-</div>
-<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
-<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
-<script>
-    new Valine({
-        el: '#vcomments',
-        app_id: '',
-        app_key: '',
-        path: window.location.pathname,
-        notify: 'false',
-        verify: 'false',
-        avatar: 'monsterid',
-        placeholder: '给我的文章加点评论吧~',
-        recordIP: true
-    });
-    const infoEle = document.querySelector('#vcomments .info');
-    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
-        infoEle.childNodes.forEach(function (item) {
-            item.parentNode.removeChild(item);
-        });
-    }
-</script>
-<style>
-    #vcomments-box {
-        padding: 5px 30px;
-    }
-
-    @media screen and (max-width: 800px) {
-        #vcomments-box {
-            padding: 5px 0px;
-        }
-    }
-
-    #vcomments-box #vcomments {
-        background-color: #fff;
-    }
-
-    .v .vlist .vcard .vh {
-        padding-right: 20px;
-    }
-
-    .v .vlist .vcard {
-        padding-left: 10px;
-    }
-</style>
-
-  
-
-  
-  
-  
-  
-  
-
-</article>
 </section>
       <footer class="footer">
   <div class="outer">
@@ -324,11 +99,7 @@
     </li>
     
     <li class="nav-item">
-      <a class="nav-item-link" href="/categories">分类</a>
-    </li>
-    
-    <li class="nav-item">
-      <a class="nav-item-link" href="/tags">标签</a>
+      <a class="nav-item-link" href="/categories/">面试</a>
     </li>
     
   </ul>
@@ -551,6 +322,10 @@
 
 
 <script type="text/javascript" src="https://js.users.51.la/20544303.js"></script>
+
+  
+<script src="/js/clickLove.js"></script>
+
 
 
 <!-- 复制 -->

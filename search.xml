@@ -1,178 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>DataBinding简单使用</title>
-    <url>/2020/04/15/DataBinding%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/</url>
-    <content><![CDATA[<p>一、介绍</p>
-<ol>
-<li>MVVM介绍<br>MVVM（全称Model-View-ViewModel）同MVC和MVP一样，是逻辑分层解偶的模式（如果你还不了解MVC和MVP，建议还是提前了解一下）。</li>
-</ol>
-<p>1.1 结构图<br>MVVM结构图</p>
-<p>从上图我们可以了解到MVVM的三要素，他们分别是：</p>
-<p>View层：xml、Activity、Fragment、Adapter和View等<br>Model层：数据源（本地数据和网络数据等）<br>ViewModel层：View层处理数据以及逻辑处理<br>2. Data Binding介绍<br>Data Binding不算特别新的东西，2015年Google就推出了，但即便是现在，很多人都没有学习过它，我就是这些工程师中的一位，因为我觉得MVP已经足够帮我处理日常的业务，Android Jetpack的出现，是我研究Data Binding的一个契机。</p>
-<p>在进行下文之前，我有必要声明一下，MVVM和Data Binding是两个不同的概念，MVVM是一种架构模式，而Data Binding是一个实现数据和UI绑定的框架，是构建MVVM模式的一个工具。</p>
-<p>2.1 学习姿势<br>我依然认为官方文档是最好的学习途径：<br>官方文档：Data Binding Library<br>谷歌实验室：官方教程<br>官方Demo地址：<a href="https://github.com/googlecodelabs/android-databinding">https://github.com/googlecodelabs/android-databinding</a></p>
-<p>二、实战<br>在这里，我打算先在上一节即学即用Android Jetpack - Navigation的基础代码上进行拓展（如有涉及到Navigation的代码，我会注明），本文会在登录和注册模块的基础上进行讲解，后期如有需要，会拓展到其他模块。</p>
-<p>效果图，和之前的有点不一样：</p>
-<p>Data Binding<br>第一步 在app模块下的build.gradle文件添加内容<br>android {<br>…<br>    dataBinding {<br>       enabled true<br>    }<br>}<br>第二步 构建LoginModel<br>创建登录的LoginModel，LoginModel主要负责登录逻辑的处理以及两个输入框内容改变的时候数据更新的处理：</p>
-<p>class LoginModel constructor(name: String, pwd: String, context: Context) {<br>    val n = ObservableField<String>(name)<br>    val p = ObservableField<String>(pwd)<br>    var context: Context = context</p>
-<pre><code>/**
- * 用户名改变回调的函数
- */
-fun onNameChanged(s: CharSequence) {
-    n.set(s.toString())
-}
-
-/**
- * 密码改变的回调函数
- */
-fun onPwdChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-    p.set(s.toString())
-}
-
-fun login() {
-    if (n.get().equals(BaseConstant.USER_NAME)
-        &amp;&amp; p.get().equals(BaseConstant.USER_PWD)
-    ) {
-        Toast.makeText(context, &quot;账号密码正确&quot;, Toast.LENGTH_SHORT).show()
-        val intent = Intent(context, MainActivity::class.java)
-        context.startActivity(intent)
-    }
-}</code></pre><p>}<br>我相信同学们可能会对ObservableField存在疑惑，那么ObservableField是什么呢？它其实是一个可观察的域，通过泛型来使用，可以使用的方法也就三个：</p>
-<p>方法    作用<br>ObservableField(T value)    构造函数，设置可观察的域<br>T get()    获取可观察的域的内容，可以使用UI控件监测它的值<br>set(T value)    设置可观察的域，设置成功之后，会通知UI控件进行更新<br>不过，除了使用ObservableField之外，Data Binding为我们提供了基本类型的ObservableXXX(如ObservableInt)和存放容器的ObservableXXX(如ObservableList<T>)等，同样，如果你想让你自定义的类变成可观察状态，需要实现Observable接口。</p>
-<p>我们再回头看看LoginModel这个类，它其实只有分别用来观察name和pwd的成员变量n和p，外加一个处理登录逻辑的方法，非常简单。</p>
-<p>第三步 创建布局文件<br>引入Data Binding之后的布局文件的使用方式会和以前的布局使用方式有很大的不同，且听我一一解释：</p>
-<p>标签名    作用<br>layout    用作布局的根节点，只能包裹一个View标签，且不能包裹merge标签。<br>data    Data Binding的数据，只能存在一个data标签。<br>variable    data中使用，数据的变量标签，type属性指明变量的类，如com.joe.jetpackdemo.viewmodel.LoginModel。name属性指明变量的名字，方便布局中使用。<br>import    data中使用，需要使用静态方法和静态常量，如需要使用View.Visble属性的时候，则需导入<import type="android.view.View"/>。type属性指明类的路径，如果两个import标签导入的类名相同，则可以使用alias属性声明别名，使用的时候直接使用别名即可。<br>include    View标签中使用，作用同普通布局中的include一样，需要使用bind:&lt;参数名&gt;传递参数<br>我们再看一下LoginFragment下的fragment_login.xml布局文件：</p>
-<?xml version="1.0" encoding="utf-8"?>
-<p><layout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"></p>
-<pre><code>&lt;data&gt;
-    &lt;!--需要的viewModel,通过mBinding.vm=mViewMode注入--&gt;
-    &lt;variable
-        name=&quot;model&quot;
-        type=&quot;com.joe.jetpackdemo.viewmodel.LoginModel&quot;/&gt;
-
-    &lt;variable
-        name=&quot;activity&quot;
-        type=&quot;androidx.fragment.app.FragmentActivity&quot;/&gt;
-&lt;/data&gt;
-
-&lt;androidx.constraintlayout.widget.ConstraintLayout
-    android:layout_width=&quot;match_parent&quot;
-    android:layout_height=&quot;match_parent&quot;&gt;
-
-    &lt;TextView
-        android:id=&quot;@+id/txt_cancel&quot;
-        android:onClick=&quot;@{()-&gt; activity.onBackPressed()}&quot;
-        /&gt;
-
-    &lt;TextView
-        android:id=&quot;@+id/txt_title&quot;
-        app:layout_constraintTop_toTopOf=&quot;parent&quot;
-        .../&gt;
-
-    &lt;EditText
-        android:id=&quot;@+id/et_account&quot;
-        android:text=&quot;@{model.n.get()}&quot;
-        android:onTextChanged=&quot;@{(text, start, before, count)-&gt;model.onNameChanged(text)}&quot;
-        ...
-        /&gt;
-
-    &lt;EditText
-        android:id=&quot;@+id/et_pwd&quot;
-        android:text=&quot;@{model.p.get()}&quot;
-        android:onTextChanged=&quot;@{model::onPwdChanged}&quot;
-        ...
-        /&gt;
-
-    &lt;Button
-        android:id=&quot;@+id/btn_login&quot;
-        android:text=&quot;Sign in&quot;
-        android:onClick=&quot;@{() -&gt; model.login()}&quot;
-        android:enabled=&quot;@{(model.p.get().isEmpty()||model.n.get().isEmpty()) ? false : true}&quot;
-        .../&gt;
-
-
-&lt;/androidx.constraintlayout.widget.ConstraintLayout&gt;</code></pre></layout>
-variable有两个:
-
-<p>model：类型为com.joe.jetpackdemo.viewmodel.LoginModel，绑定用户名详见et_accountEditText中的android:text=”@{model.n.get()}”，当EditText输入框内容变化的时候有如下处理android:onTextChanged=”@{(text, start, before, count)-&gt;model.onNameChanged(text)}”，以及登录按钮处理android:onClick=”@{() -&gt; model.login()}”。<br>activity：类型为androidx.fragment.app.FragmentActivity，主要用来返回按钮的事件处理，详见txt_cancelTextView的android:onClick=”@{()-&gt; activity.onBackPressed()}”。<br>对于以上的内容，我仍然有知识点需要讲解：</p>
-<ol>
-<li><p>属性的引用<br>如果想使用ViewModel中成员变量，如直接使用model.p。</p>
-</li>
-<li><p>事件绑定<br>事件绑定包括方法引用和监听绑定：</p>
-</li>
-</ol>
-<p>方法引用：参数类型和返回类型要一致，参考et_pwdEditText的android:onTextChanged引用。<br>监听绑定：相比较于方法引用，监听绑定的要求就没那么高了，我们可以使用自行定义的函数，参考et_accountEditText的android:onTextChanged引用。<br>3. 表达式<br>如果你注意到了btn_loginButton在密码没有内容的时候是灰色的：<br>LoginFragment<br>是因为它在android:enabled使用了表达式：@{(model.p.get().isEmpty()||model.n.get().isEmpty()) ? false : true}，它的意思是用户名和密码为空的时候登录的enable属性为false，这是普通的三元表达式，除了上述的||和三元表达式之外，Data Binding还支持：</p>
-<p>运算符 + - / * %<br>字符串连接 +<br>逻辑与或 &amp;&amp; ||<br>二进制 &amp; | ^<br>一元 + - ! ~<br>移位 &gt;&gt; &gt;&gt;&gt; &lt;&lt;<br>比较 == &gt; &lt; &gt;= &lt;= (Note that &lt; needs to be escaped as &lt;)<br>instanceof<br>Grouping ()<br>Literals - character, String, numeric, null<br>Cast<br>方法调用<br>域访问<br>数组访问<br>三元操作符<br>除了上述之外，Data Binding新增了空合并操作符??，例如android:text=”@{user.displayName ?? user.lastName}”，它等价于android:text=”@{user.displayName != null ? user.displayName : user.lastName}”。</p>
-<p>第四步 生成绑定类<br>我们的布局文件创建完毕之后，点击Build下面的Make Project，让系统帮我生成绑定类，生成绑定的类如下：<br>生成的绑定类</p>
-<p>下面我们只需在LoginFragment完成绑定即可，绑定操作既可以使用上述生成的FragmentLoginBinding也可以使用自带的DataBindingUtil完成：</p>
-<ol>
-<li>使用DataBindingUtil<br>我们可以看一下DataBindingUtil的一些常用Api：</li>
-</ol>
-<p>函数名    作用<br>setContentView    用来进行Activity下面的绑定<br>inflate    用来进行Fragment下面的绑定<br>bind    用来进行View的绑定<br>LoginFragment绑定代码如下：</p>
-<pre><code>override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?,
-    savedInstanceState: Bundle?
-): View? {
-    val binding: FragmentLoginBinding = DataBindingUtil.inflate(
-        inflater
-        , R.layout.fragment_login
-        , container
-        , false
-    )
-    loginModel = LoginModel(&quot;&quot;,&quot;&quot;,context!!)
-    binding.model = loginModel
-    binding.activity = activity
-    return binding.root
-}</code></pre><ol start="2">
-<li>使用生成的FragmentLoginBinding<br>使用方法与第一种类似，仅需将生成方式改成val binding = FragmentLoginBinding.inflate( inflater , container , false )即可</li>
-</ol>
-<p>运行一下代码，开始图的效果就出现了。</p>
-<p>三、更多<br>Data Binding还有一些有趣的功能，为了让同学们了解到更多的知识，我们在这里有必要探讨一下：</p>
-<ol>
-<li>布局中属性的设置</li>
-<li>1 有属性有setter的情况<br>如果XXXView类有成员变量borderColor，并且XXXView类有setBoderColor(int color)方法，那么在布局中我们就可以借助Data Binding直接使用app:borderColor这个属性，不太明白？没关系，以DrawerLayout为例，DrawerLayout没有声明app:scrimColor、app:drawerListener，但是DrawerLayout有mScrimColor:int、mListener:DrawerListener这两个成员变量并且具有这两个属性的setter的方法，他就可以直接使用app:scrimColor、app:drawerListener这两个属性，代码如下：</li>
-</ol>
-<p>&lt;android.support.v4.widget.DrawerLayout<br>    android:layout_width=”wrap_content”<br>    android:layout_height=”wrap_content”<br>    app:scrimColor=”@{@color/scrim}”<br>    app:drawerListener=”@{fragment.drawerListener}”&gt;<br>1.2 没有setter但是有相关方法<br>还用XXXView为例，它有成员变量borderColor，这次设置borderColor的方法是setBColor(总有程序员乱写方法名~)，强行用app:borderColor显然是行不通的，可以这样用的前提是必须有setBoderColor(int color)方法，显然setBColor不匹配，但我们可以通过BindingMethods注解实现app:borderColor的使用，代码如下：</p>
-<p>@BindingMethods(value = [<br>    BindingMethod(<br>        type = 包名.XXXView::class,<br>        attribute = “app:borderColor”,<br>        method = “setBColor”)])<br>1.3 自定义属性<br>这次不仅没setter方法，甚至连成员变量都需要自带（条件越来越刻苦~），这次我们的目标就是给EditText添加文本监听器，先在LoginModel中自定义一个监听器并使用@BindingAdapter注解：</p>
-<pre><code>// SimpleWatcher 是简化了的TextWatcher
-val nameWatcher = object : SimpleWatcher() {
-    override fun afterTextChanged(s: Editable) {
-        super.afterTextChanged(s)
-
-        n.set(s.toString())
-    }
-}
-
-@BindingAdapter(&quot;addTextChangedListener&quot;)
-fun addTextChangedListener(editText: EditText, simpleWatcher: SimpleWatcher) {
-    editText.addTextChangedListener(simpleWatcher)
-}</code></pre><p>这样我们就可以在布局文件中对EditText愉快的使用app:addTextChangedListener属性了：</p>
-<pre><code>&lt;EditText
-    android:id=&quot;@+id/et_account&quot;
-    android:text=&quot;@{model.n.get()}&quot;
-    app:addTextChangedListener=&quot;@{model.nameWatcher}&quot;
-    ...
-    /&gt;</code></pre><p>效果与我们之前使用的时候一样</p>
-<ol start="2">
-<li><p>双向绑定<br>使用双向绑定可以简化我们的代码，比如我们上面的EditText在实现双向绑定之后既不需要添加SimpleWatcher也不需要用方法调用，怎么实现呢？代码如下：</p>
-<pre><code>&lt;EditText
-    android:id=&quot;@+id/et_account&quot;
-    android:text=&quot;@={model.n.get()}&quot;
-    ...
-    /&gt;</code></pre><p>仅仅在将@{model.n.get()}替换为@={model.n.get()}，多了一个=号而已，需要注意的是，属性必须是可观察的，可以使用上面提到的ObservableField，也可以自定义实现BaseObservable接口，双向绑定的时候需要注意无限循环，更多关于双向绑定还请查看官方文档。</p>
-</li>
-</ol>
-<p>四、总结<br>Data Binding总结</p>
-<p>作者：TeaOf<br>链接：<a href="https://www.jianshu.com/p/e3b881d80c6d" target="_blank" rel="noopener">https://www.jianshu.com/p/e3b881d80c6d</a><br>来源：简书<br>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</p>
-]]></content>
-      <tags>
-        <tag>Android Jetpack</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>BottomNavigation工作原理</title>
     <url>/2020/04/26/BottomNavigation%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/</url>
     <content><![CDATA[<h1 id="BottomNavigation工作原理"><a href="#BottomNavigation工作原理" class="headerlink" title="BottomNavigation工作原理"></a>BottomNavigation工作原理</h1><h1 id="使用BottomNavigationView组件进行底部导航栏的创建"><a href="#使用BottomNavigationView组件进行底部导航栏的创建" class="headerlink" title="使用BottomNavigationView组件进行底部导航栏的创建"></a>使用BottomNavigationView组件进行底部导航栏的创建</h1><h2 id="BottomNavigationView可以与Menu进行交互使用，menu的顺序决定了BottomNavigationView-下方的Item顺序。"><a href="#BottomNavigationView可以与Menu进行交互使用，menu的顺序决定了BottomNavigationView-下方的Item顺序。" class="headerlink" title="BottomNavigationView可以与Menu进行交互使用，menu的顺序决定了BottomNavigationView 下方的Item顺序。"></a>BottomNavigationView可以与Menu进行交互使用，menu的顺序决定了BottomNavigationView 下方的Item顺序。</h2><h2 id="fragment控件中"><a href="#fragment控件中" class="headerlink" title="fragment控件中"></a>fragment控件中</h2><p>name属性为指定初始化的Fragment<br>defaultNavHost属性（检查当前的栈中是否有其余的Fragment，如果有则会拦截返回手势以及返回键，将栈中下一个Fragment呈现，而不是弹出所有Framgnet）<br>navGraph属性为制定的FrgmentNavigation的路由结构</p>
@@ -419,6 +247,189 @@ override fun onCreate(savedInstanceState: Bundle?) {
 ]]></content>
   </entry>
   <entry>
+    <title>跨进程传递大图的方案</title>
+    <url>/2020/06/02/%E8%B7%A8%E8%BF%9B%E7%A8%8B%E4%BC%A0%E9%80%92%E5%A4%A7%E5%9B%BE%E7%9A%84%E6%96%B9%E6%A1%88/</url>
+    <content><![CDATA[<h1 id="Q：如何跨进程传递大图"><a href="#Q：如何跨进程传递大图" class="headerlink" title="Q：如何跨进程传递大图"></a>Q：如何跨进程传递大图</h1><h2 id="A：1-通过文件存储方式传递-但是这样使用文件读写方式会导致效率不够好。"><a href="#A：1-通过文件存储方式传递-但是这样使用文件读写方式会导致效率不够好。" class="headerlink" title="A：1.通过文件存储方式传递,但是这样使用文件读写方式会导致效率不够好。"></a>A：1.通过文件存储方式传递,但是这样使用文件读写方式会导致效率不够好。</h2><h2 id="A-2-Bitmap实现了Parceable接口，可以通过Intent-putExtra-String-name-Parceable-value-方法传递，但是太大会抛出TransactionTooLarge异常，因为底层判断Bitmap-Transaction-失败且Intent的数据大于200K就会抛出这个异常了。"><a href="#A-2-Bitmap实现了Parceable接口，可以通过Intent-putExtra-String-name-Parceable-value-方法传递，但是太大会抛出TransactionTooLarge异常，因为底层判断Bitmap-Transaction-失败且Intent的数据大于200K就会抛出这个异常了。" class="headerlink" title="A: 2.Bitmap实现了Parceable接口，可以通过Intent.putExtra(String name , Parceable value)方法传递，但是太大会抛出TransactionTooLarge异常，因为底层判断Bitmap Transaction 失败且Intent的数据大于200K就会抛出这个异常了。"></a>A: 2.Bitmap实现了Parceable接口，可以通过Intent.putExtra(String name , Parceable value)方法传递，但是太大会抛出TransactionTooLarge异常，因为底层判断Bitmap Transaction 失败且Intent的数据大于200K就会抛出这个异常了。</h2><h1 id="Q：为什么Intent传递值会有大小限制"><a href="#Q：为什么Intent传递值会有大小限制" class="headerlink" title="Q：为什么Intent传递值会有大小限制"></a>Q：为什么Intent传递值会有大小限制</h1><h2 id="A：-应用再启动binder机制的时候回映射1M的内存缓冲区，所有正在进行的Binder事物共享这1M的缓冲区，当使用IPC时申请的缓存超过1M-其他事物占用内存时就会失败抛出TransactionTooLarge异常。"><a href="#A：-应用再启动binder机制的时候回映射1M的内存缓冲区，所有正在进行的Binder事物共享这1M的缓冲区，当使用IPC时申请的缓存超过1M-其他事物占用内存时就会失败抛出TransactionTooLarge异常。" class="headerlink" title="A： 应用再启动binder机制的时候回映射1M的内存缓冲区，所有正在进行的Binder事物共享这1M的缓冲区，当使用IPC时申请的缓存超过1M - 其他事物占用内存时就会失败抛出TransactionTooLarge异常。"></a>A： 应用再启动binder机制的时候回映射1M的内存缓冲区，所有正在进行的Binder事物共享这1M的缓冲区，当使用IPC时申请的缓存超过1M - 其他事物占用内存时就会失败抛出TransactionTooLarge异常。</h2><h1 id="Q：如何绕过这个异常呢"><a href="#Q：如何绕过这个异常呢" class="headerlink" title="Q：如何绕过这个异常呢"></a>Q：如何绕过这个异常呢</h1><h2 id="A：可以使用如下代码"><a href="#A：可以使用如下代码" class="headerlink" title="A：可以使用如下代码"></a>A：可以使用如下代码</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">Bunder bunder &#x3D; new Bunder();</span><br><span class="line">bunder.putBinder(&quot;binder&quot;,new IRemoteGetBitmap.Stub()&#123;</span><br><span class="line"></span><br><span class="line">	@Override</span><br><span class="line">	public Bitmap getBitmap() throws RemoteException&#123;</span><br><span class="line">		return mBitmap;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	&#125;);</span><br><span class="line"></span><br><span class="line">	intent.putExtras(bundle);</span><br></pre></td></tr></table></figure>
+
+<h1 id="Q-为什么putBunder的方式传Bitmap不会抛TranscationTooLargeExcaption异常"><a href="#Q-为什么putBunder的方式传Bitmap不会抛TranscationTooLargeExcaption异常" class="headerlink" title="Q:为什么putBunder的方式传Bitmap不会抛TranscationTooLargeExcaption异常"></a>Q:为什么putBunder的方式传Bitmap不会抛TranscationTooLargeExcaption异常</h1><h2 id="A：底层在IPC时把Bitmap写进Parcel的源码"><a href="#A：底层在IPC时把Bitmap写进Parcel的源码" class="headerlink" title="A：底层在IPC时把Bitmap写进Parcel的源码"></a>A：底层在IPC时把Bitmap写进Parcel的源码</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">Android - <span class="number">28</span> Bitmap.cpp</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> jboolean <span class="title">Bitmap_writeToParcel</span><span class="params">(JNIEnv* env, jobject, ...)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 拿到 Native 的 Bitmap                                </span></span><br><span class="line">    <span class="keyword">auto</span> bitmapWrapper = <span class="keyword">reinterpret_cast</span>&lt;BitmapWrapper*&gt;(bitmapHandle);</span><br><span class="line">    <span class="comment">// 拿到其对应的 SkBitmap, 用于获取 Bitmap 的像素信息</span></span><br><span class="line">    bitmapWrapper-&gt;getSkBitmap(&amp;bitmap);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> fd = bitmapWrapper-&gt;bitmap().getAshmemFd();</span><br><span class="line">    <span class="keyword">if</span> (fd &gt;= <span class="number">0</span> &amp;&amp; !isMutable &amp;&amp; p-&gt;allowFds()) &#123;</span><br><span class="line">        <span class="comment">// Bitmap 带了 ashmemFd &amp;&amp; Bitmap 不可修改 &amp;&amp; Parcel 允许带 fd</span></span><br><span class="line">        <span class="comment">// 就直接把 FD 写到 Parcel 里，结束。</span></span><br><span class="line">        status = p-&gt;writeDupImmutableBlobFileDescriptor(fd);</span><br><span class="line">        <span class="keyword">return</span> JNI_TRUE;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 不满足上面的条件就要把 Bitmap 拷贝到一块新的缓冲区</span></span><br><span class="line">    android::Parcel::WritableBlob blob;</span><br><span class="line">    <span class="comment">// 通过 writeBlob 拿到一块缓冲区 blob</span></span><br><span class="line">    status = p-&gt;writeBlob(<span class="built_in">size</span>, mutableCopy, &amp;blob);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取像素信息并写到前面拿到缓冲区 blob</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">void</span>* pSrc =  bitmap.getPixels();</span><br><span class="line">    <span class="keyword">if</span> (pSrc == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="built_in">memset</span>(blob.data(), <span class="number">0</span>, <span class="built_in">size</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">memcpy</span>(blob.data(), pSrc, <span class="built_in">size</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="然后看一下writeBlob是怎么获取缓冲区的，writeBlob虽然方法名字写着whrite，但写入操作是在writeBlob方法之后进行处理的"><a href="#然后看一下writeBlob是怎么获取缓冲区的，writeBlob虽然方法名字写着whrite，但写入操作是在writeBlob方法之后进行处理的" class="headerlink" title="然后看一下writeBlob是怎么获取缓冲区的，writeBlob虽然方法名字写着whrite，但写入操作是在writeBlob方法之后进行处理的"></a>然后看一下writeBlob是怎么获取缓冲区的，writeBlob虽然方法名字写着whrite，但写入操作是在writeBlob方法之后进行处理的</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">Android - <span class="number">28</span> Parcel.cpp</span><br><span class="line"><span class="comment">// Maximum size of a blob to transfer in-place.</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="keyword">size_t</span> BLOB_INPLACE_LIMIT = <span class="number">16</span> * <span class="number">1024</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">status_t</span> <span class="title">Parcel::writeBlob</span><span class="params">(<span class="keyword">size_t</span> len, <span class="keyword">bool</span> mutableCopy, WritableBlob* outBlob)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!mAllowFds || len &lt;= BLOB_INPLACE_LIMIT) &#123;</span><br><span class="line">        <span class="comment">// 如果不允许带 fd ，或者这个数据小于 16K</span></span><br><span class="line">        <span class="comment">// 就直接在 Parcel 的缓冲区里分配一块空间来保存这个数据</span></span><br><span class="line">        status = writeInt32(BLOB_INPLACE);</span><br><span class="line">        <span class="keyword">void</span>* ptr = writeInplace(len);</span><br><span class="line">        outBlob-&gt;init(<span class="number">-1</span>, ptr, len, <span class="literal">false</span>);</span><br><span class="line">        <span class="keyword">return</span> NO_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 另外开辟一个 ashmem，映射出一块内存，后续数据将保存在 ashmem 的内存里</span></span><br><span class="line">    <span class="keyword">int</span> fd = ashmem_create_region(<span class="string">"Parcel Blob"</span>, len);</span><br><span class="line">    <span class="keyword">void</span>* ptr = ::mmap(<span class="literal">NULL</span>, len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, <span class="number">0</span>);</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// parcel 里只写个 fd 就好了，这样就算数据量很大，parcel 自己的缓冲区也不用很大</span></span><br><span class="line">    status = writeFileDescriptor(fd, <span class="literal">true</span> <span class="comment">/*takeOwnership*/</span>);</span><br><span class="line">    outBlob-&gt;init(fd, ptr, len, mutableCopy);</span><br><span class="line">    <span class="keyword">return</span> status;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="通过上面的分析，我们可以看出，同一个Bitmap写入到Parcel所占的缓冲区大笑和Pacel的allowFds有关。"><a href="#通过上面的分析，我们可以看出，同一个Bitmap写入到Parcel所占的缓冲区大笑和Pacel的allowFds有关。" class="headerlink" title="通过上面的分析，我们可以看出，同一个Bitmap写入到Parcel所占的缓冲区大笑和Pacel的allowFds有关。"></a>通过上面的分析，我们可以看出，同一个Bitmap写入到Parcel所占的缓冲区大笑和Pacel的allowFds有关。</h2><p>通过直接Intent传Bitmap容易抛TransactionTooLargeException异常就是因为Parcel的allowFds = false，直接把Bitmap写入缓冲区占用了较大的内存。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><h2 id="较大的Bitmap通过Intent传递容易抛异常是因为Intent启动组件时，系统禁掉了文件描述符fd机制，bitmap无法利用共享内存，只能拷贝到Biner映射的缓冲区，导致缓冲区超限，出发异常，而通过putBinder的方式避免了Intent禁用描述符的影响，bitmap写parcel时的allowFds默认是true，可以利用共享内存，所以能高效传递图片。"><a href="#较大的Bitmap通过Intent传递容易抛异常是因为Intent启动组件时，系统禁掉了文件描述符fd机制，bitmap无法利用共享内存，只能拷贝到Biner映射的缓冲区，导致缓冲区超限，出发异常，而通过putBinder的方式避免了Intent禁用描述符的影响，bitmap写parcel时的allowFds默认是true，可以利用共享内存，所以能高效传递图片。" class="headerlink" title="较大的Bitmap通过Intent传递容易抛异常是因为Intent启动组件时，系统禁掉了文件描述符fd机制，bitmap无法利用共享内存，只能拷贝到Biner映射的缓冲区，导致缓冲区超限，出发异常，而通过putBinder的方式避免了Intent禁用描述符的影响，bitmap写parcel时的allowFds默认是true，可以利用共享内存，所以能高效传递图片。"></a>较大的Bitmap通过Intent传递容易抛异常是因为Intent启动组件时，系统禁掉了文件描述符fd机制，bitmap无法利用共享内存，只能拷贝到Biner映射的缓冲区，导致缓冲区超限，出发异常，而通过putBinder的方式避免了Intent禁用描述符的影响，bitmap写parcel时的allowFds默认是true，可以利用共享内存，所以能高效传递图片。</h2>]]></content>
+  </entry>
+  <entry>
+    <title>DataBinding简单使用</title>
+    <url>/2020/04/15/DataBinding%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/</url>
+    <content><![CDATA[<p>一、介绍</p>
+<ol>
+<li>MVVM介绍<br>MVVM（全称Model-View-ViewModel）同MVC和MVP一样，是逻辑分层解偶的模式（如果你还不了解MVC和MVP，建议还是提前了解一下）。</li>
+</ol>
+<p>1.1 结构图<br>MVVM结构图</p>
+<p>从上图我们可以了解到MVVM的三要素，他们分别是：</p>
+<p>View层：xml、Activity、Fragment、Adapter和View等<br>Model层：数据源（本地数据和网络数据等）<br>ViewModel层：View层处理数据以及逻辑处理<br>2. Data Binding介绍<br>Data Binding不算特别新的东西，2015年Google就推出了，但即便是现在，很多人都没有学习过它，我就是这些工程师中的一位，因为我觉得MVP已经足够帮我处理日常的业务，Android Jetpack的出现，是我研究Data Binding的一个契机。</p>
+<p>在进行下文之前，我有必要声明一下，MVVM和Data Binding是两个不同的概念，MVVM是一种架构模式，而Data Binding是一个实现数据和UI绑定的框架，是构建MVVM模式的一个工具。</p>
+<p>2.1 学习姿势<br>我依然认为官方文档是最好的学习途径：<br>官方文档：Data Binding Library<br>谷歌实验室：官方教程<br>官方Demo地址：<a href="https://github.com/googlecodelabs/android-databinding">https://github.com/googlecodelabs/android-databinding</a></p>
+<p>二、实战<br>在这里，我打算先在上一节即学即用Android Jetpack - Navigation的基础代码上进行拓展（如有涉及到Navigation的代码，我会注明），本文会在登录和注册模块的基础上进行讲解，后期如有需要，会拓展到其他模块。</p>
+<p>效果图，和之前的有点不一样：</p>
+<p>Data Binding<br>第一步 在app模块下的build.gradle文件添加内容<br>android {<br>…<br>    dataBinding {<br>       enabled true<br>    }<br>}<br>第二步 构建LoginModel<br>创建登录的LoginModel，LoginModel主要负责登录逻辑的处理以及两个输入框内容改变的时候数据更新的处理：</p>
+<p>class LoginModel constructor(name: String, pwd: String, context: Context) {<br>    val n = ObservableField<String>(name)<br>    val p = ObservableField<String>(pwd)<br>    var context: Context = context</p>
+<pre><code>/**
+ * 用户名改变回调的函数
+ */
+fun onNameChanged(s: CharSequence) {
+    n.set(s.toString())
+}
+
+/**
+ * 密码改变的回调函数
+ */
+fun onPwdChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+    p.set(s.toString())
+}
+
+fun login() {
+    if (n.get().equals(BaseConstant.USER_NAME)
+        &amp;&amp; p.get().equals(BaseConstant.USER_PWD)
+    ) {
+        Toast.makeText(context, &quot;账号密码正确&quot;, Toast.LENGTH_SHORT).show()
+        val intent = Intent(context, MainActivity::class.java)
+        context.startActivity(intent)
+    }
+}</code></pre><p>}<br>我相信同学们可能会对ObservableField存在疑惑，那么ObservableField是什么呢？它其实是一个可观察的域，通过泛型来使用，可以使用的方法也就三个：</p>
+<p>方法    作用<br>ObservableField(T value)    构造函数，设置可观察的域<br>T get()    获取可观察的域的内容，可以使用UI控件监测它的值<br>set(T value)    设置可观察的域，设置成功之后，会通知UI控件进行更新<br>不过，除了使用ObservableField之外，Data Binding为我们提供了基本类型的ObservableXXX(如ObservableInt)和存放容器的ObservableXXX(如ObservableList<T>)等，同样，如果你想让你自定义的类变成可观察状态，需要实现Observable接口。</p>
+<p>我们再回头看看LoginModel这个类，它其实只有分别用来观察name和pwd的成员变量n和p，外加一个处理登录逻辑的方法，非常简单。</p>
+<p>第三步 创建布局文件<br>引入Data Binding之后的布局文件的使用方式会和以前的布局使用方式有很大的不同，且听我一一解释：</p>
+<p>标签名    作用<br>layout    用作布局的根节点，只能包裹一个View标签，且不能包裹merge标签。<br>data    Data Binding的数据，只能存在一个data标签。<br>variable    data中使用，数据的变量标签，type属性指明变量的类，如com.joe.jetpackdemo.viewmodel.LoginModel。name属性指明变量的名字，方便布局中使用。<br>import    data中使用，需要使用静态方法和静态常量，如需要使用View.Visble属性的时候，则需导入<import type="android.view.View"/>。type属性指明类的路径，如果两个import标签导入的类名相同，则可以使用alias属性声明别名，使用的时候直接使用别名即可。<br>include    View标签中使用，作用同普通布局中的include一样，需要使用bind:&lt;参数名&gt;传递参数<br>我们再看一下LoginFragment下的fragment_login.xml布局文件：</p>
+<?xml version="1.0" encoding="utf-8"?>
+<p><layout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"></p>
+<pre><code>&lt;data&gt;
+    &lt;!--需要的viewModel,通过mBinding.vm=mViewMode注入--&gt;
+    &lt;variable
+        name=&quot;model&quot;
+        type=&quot;com.joe.jetpackdemo.viewmodel.LoginModel&quot;/&gt;
+
+    &lt;variable
+        name=&quot;activity&quot;
+        type=&quot;androidx.fragment.app.FragmentActivity&quot;/&gt;
+&lt;/data&gt;
+
+&lt;androidx.constraintlayout.widget.ConstraintLayout
+    android:layout_width=&quot;match_parent&quot;
+    android:layout_height=&quot;match_parent&quot;&gt;
+
+    &lt;TextView
+        android:id=&quot;@+id/txt_cancel&quot;
+        android:onClick=&quot;@{()-&gt; activity.onBackPressed()}&quot;
+        /&gt;
+
+    &lt;TextView
+        android:id=&quot;@+id/txt_title&quot;
+        app:layout_constraintTop_toTopOf=&quot;parent&quot;
+        .../&gt;
+
+    &lt;EditText
+        android:id=&quot;@+id/et_account&quot;
+        android:text=&quot;@{model.n.get()}&quot;
+        android:onTextChanged=&quot;@{(text, start, before, count)-&gt;model.onNameChanged(text)}&quot;
+        ...
+        /&gt;
+
+    &lt;EditText
+        android:id=&quot;@+id/et_pwd&quot;
+        android:text=&quot;@{model.p.get()}&quot;
+        android:onTextChanged=&quot;@{model::onPwdChanged}&quot;
+        ...
+        /&gt;
+
+    &lt;Button
+        android:id=&quot;@+id/btn_login&quot;
+        android:text=&quot;Sign in&quot;
+        android:onClick=&quot;@{() -&gt; model.login()}&quot;
+        android:enabled=&quot;@{(model.p.get().isEmpty()||model.n.get().isEmpty()) ? false : true}&quot;
+        .../&gt;
+
+
+&lt;/androidx.constraintlayout.widget.ConstraintLayout&gt;</code></pre></layout>
+variable有两个:
+
+<p>model：类型为com.joe.jetpackdemo.viewmodel.LoginModel，绑定用户名详见et_accountEditText中的android:text=”@{model.n.get()}”，当EditText输入框内容变化的时候有如下处理android:onTextChanged=”@{(text, start, before, count)-&gt;model.onNameChanged(text)}”，以及登录按钮处理android:onClick=”@{() -&gt; model.login()}”。<br>activity：类型为androidx.fragment.app.FragmentActivity，主要用来返回按钮的事件处理，详见txt_cancelTextView的android:onClick=”@{()-&gt; activity.onBackPressed()}”。<br>对于以上的内容，我仍然有知识点需要讲解：</p>
+<ol>
+<li><p>属性的引用<br>如果想使用ViewModel中成员变量，如直接使用model.p。</p>
+</li>
+<li><p>事件绑定<br>事件绑定包括方法引用和监听绑定：</p>
+</li>
+</ol>
+<p>方法引用：参数类型和返回类型要一致，参考et_pwdEditText的android:onTextChanged引用。<br>监听绑定：相比较于方法引用，监听绑定的要求就没那么高了，我们可以使用自行定义的函数，参考et_accountEditText的android:onTextChanged引用。<br>3. 表达式<br>如果你注意到了btn_loginButton在密码没有内容的时候是灰色的：<br>LoginFragment<br>是因为它在android:enabled使用了表达式：@{(model.p.get().isEmpty()||model.n.get().isEmpty()) ? false : true}，它的意思是用户名和密码为空的时候登录的enable属性为false，这是普通的三元表达式，除了上述的||和三元表达式之外，Data Binding还支持：</p>
+<p>运算符 + - / * %<br>字符串连接 +<br>逻辑与或 &amp;&amp; ||<br>二进制 &amp; | ^<br>一元 + - ! ~<br>移位 &gt;&gt; &gt;&gt;&gt; &lt;&lt;<br>比较 == &gt; &lt; &gt;= &lt;= (Note that &lt; needs to be escaped as &lt;)<br>instanceof<br>Grouping ()<br>Literals - character, String, numeric, null<br>Cast<br>方法调用<br>域访问<br>数组访问<br>三元操作符<br>除了上述之外，Data Binding新增了空合并操作符??，例如android:text=”@{user.displayName ?? user.lastName}”，它等价于android:text=”@{user.displayName != null ? user.displayName : user.lastName}”。</p>
+<p>第四步 生成绑定类<br>我们的布局文件创建完毕之后，点击Build下面的Make Project，让系统帮我生成绑定类，生成绑定的类如下：<br>生成的绑定类</p>
+<p>下面我们只需在LoginFragment完成绑定即可，绑定操作既可以使用上述生成的FragmentLoginBinding也可以使用自带的DataBindingUtil完成：</p>
+<ol>
+<li>使用DataBindingUtil<br>我们可以看一下DataBindingUtil的一些常用Api：</li>
+</ol>
+<p>函数名    作用<br>setContentView    用来进行Activity下面的绑定<br>inflate    用来进行Fragment下面的绑定<br>bind    用来进行View的绑定<br>LoginFragment绑定代码如下：</p>
+<pre><code>override fun onCreateView(
+    inflater: LayoutInflater, container: ViewGroup?,
+    savedInstanceState: Bundle?
+): View? {
+    val binding: FragmentLoginBinding = DataBindingUtil.inflate(
+        inflater
+        , R.layout.fragment_login
+        , container
+        , false
+    )
+    loginModel = LoginModel(&quot;&quot;,&quot;&quot;,context!!)
+    binding.model = loginModel
+    binding.activity = activity
+    return binding.root
+}</code></pre><ol start="2">
+<li>使用生成的FragmentLoginBinding<br>使用方法与第一种类似，仅需将生成方式改成val binding = FragmentLoginBinding.inflate( inflater , container , false )即可</li>
+</ol>
+<p>运行一下代码，开始图的效果就出现了。</p>
+<p>三、更多<br>Data Binding还有一些有趣的功能，为了让同学们了解到更多的知识，我们在这里有必要探讨一下：</p>
+<ol>
+<li>布局中属性的设置</li>
+<li>1 有属性有setter的情况<br>如果XXXView类有成员变量borderColor，并且XXXView类有setBoderColor(int color)方法，那么在布局中我们就可以借助Data Binding直接使用app:borderColor这个属性，不太明白？没关系，以DrawerLayout为例，DrawerLayout没有声明app:scrimColor、app:drawerListener，但是DrawerLayout有mScrimColor:int、mListener:DrawerListener这两个成员变量并且具有这两个属性的setter的方法，他就可以直接使用app:scrimColor、app:drawerListener这两个属性，代码如下：</li>
+</ol>
+<p>&lt;android.support.v4.widget.DrawerLayout<br>    android:layout_width=”wrap_content”<br>    android:layout_height=”wrap_content”<br>    app:scrimColor=”@{@color/scrim}”<br>    app:drawerListener=”@{fragment.drawerListener}”&gt;<br>1.2 没有setter但是有相关方法<br>还用XXXView为例，它有成员变量borderColor，这次设置borderColor的方法是setBColor(总有程序员乱写方法名~)，强行用app:borderColor显然是行不通的，可以这样用的前提是必须有setBoderColor(int color)方法，显然setBColor不匹配，但我们可以通过BindingMethods注解实现app:borderColor的使用，代码如下：</p>
+<p>@BindingMethods(value = [<br>    BindingMethod(<br>        type = 包名.XXXView::class,<br>        attribute = “app:borderColor”,<br>        method = “setBColor”)])<br>1.3 自定义属性<br>这次不仅没setter方法，甚至连成员变量都需要自带（条件越来越刻苦~），这次我们的目标就是给EditText添加文本监听器，先在LoginModel中自定义一个监听器并使用@BindingAdapter注解：</p>
+<pre><code>// SimpleWatcher 是简化了的TextWatcher
+val nameWatcher = object : SimpleWatcher() {
+    override fun afterTextChanged(s: Editable) {
+        super.afterTextChanged(s)
+
+        n.set(s.toString())
+    }
+}
+
+@BindingAdapter(&quot;addTextChangedListener&quot;)
+fun addTextChangedListener(editText: EditText, simpleWatcher: SimpleWatcher) {
+    editText.addTextChangedListener(simpleWatcher)
+}</code></pre><p>这样我们就可以在布局文件中对EditText愉快的使用app:addTextChangedListener属性了：</p>
+<pre><code>&lt;EditText
+    android:id=&quot;@+id/et_account&quot;
+    android:text=&quot;@{model.n.get()}&quot;
+    app:addTextChangedListener=&quot;@{model.nameWatcher}&quot;
+    ...
+    /&gt;</code></pre><p>效果与我们之前使用的时候一样</p>
+<ol start="2">
+<li><p>双向绑定<br>使用双向绑定可以简化我们的代码，比如我们上面的EditText在实现双向绑定之后既不需要添加SimpleWatcher也不需要用方法调用，怎么实现呢？代码如下：</p>
+<pre><code>&lt;EditText
+    android:id=&quot;@+id/et_account&quot;
+    android:text=&quot;@={model.n.get()}&quot;
+    ...
+    /&gt;</code></pre><p>仅仅在将@{model.n.get()}替换为@={model.n.get()}，多了一个=号而已，需要注意的是，属性必须是可观察的，可以使用上面提到的ObservableField，也可以自定义实现BaseObservable接口，双向绑定的时候需要注意无限循环，更多关于双向绑定还请查看官方文档。</p>
+</li>
+</ol>
+<p>四、总结<br>Data Binding总结</p>
+<p>作者：TeaOf<br>链接：<a href="https://www.jianshu.com/p/e3b881d80c6d" target="_blank" rel="noopener">https://www.jianshu.com/p/e3b881d80c6d</a><br>来源：简书<br>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</p>
+]]></content>
+      <tags>
+        <tag>Android Jetpack</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>paging框架工作原理与LiveData密不可分的关系</title>
     <url>/2020/05/18/%E4%BB%8EPaging%E4%BA%86%E8%A7%A3LiveData%E6%A1%86%E6%9E%B6%E5%8E%9F%E7%90%86Ver.1/</url>
     <content><![CDATA[<h1 id="实现功能-缓存数据更新到列表上"><a href="#实现功能-缓存数据更新到列表上" class="headerlink" title="实现功能(缓存数据更新到列表上)"></a>实现功能(缓存数据更新到列表上)</h1><h2 id="需要解决的问题"><a href="#需要解决的问题" class="headerlink" title="需要解决的问题"></a>需要解决的问题</h2><p>1.PagingList对象的创建(接收数据类型是List，不能光靠new来创建，需要进行巧妙的转换)</p>
@@ -489,20 +500,6 @@ override fun onCreate(savedInstanceState: Bundle?) {
 ]]></content>
       <tags>
         <tag>Android Jetpack</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>跨进程传递大图的方案</title>
-    <url>/2020/06/02/%E8%B7%A8%E8%BF%9B%E7%A8%8B%E4%BC%A0%E9%80%92%E5%A4%A7%E5%9B%BE%E7%9A%84%E6%96%B9%E6%A1%88/</url>
-    <content><![CDATA[<h1 id="Q：如何跨进程传递大图"><a href="#Q：如何跨进程传递大图" class="headerlink" title="Q：如何跨进程传递大图"></a>Q：如何跨进程传递大图</h1><h2 id="A：1-通过文件存储方式传递-但是这样使用文件读写方式会导致效率不够好。"><a href="#A：1-通过文件存储方式传递-但是这样使用文件读写方式会导致效率不够好。" class="headerlink" title="A：1.通过文件存储方式传递,但是这样使用文件读写方式会导致效率不够好。"></a>A：1.通过文件存储方式传递,但是这样使用文件读写方式会导致效率不够好。</h2><h2 id="A-2-Bitmap实现了Parceable接口，可以通过Intent-putExtra-String-name-Parceable-value-方法传递，但是太大会抛出TransactionTooLarge异常，因为底层判断Bitmap-Transaction-失败且Intent的数据大于200K就会抛出这个异常了。"><a href="#A-2-Bitmap实现了Parceable接口，可以通过Intent-putExtra-String-name-Parceable-value-方法传递，但是太大会抛出TransactionTooLarge异常，因为底层判断Bitmap-Transaction-失败且Intent的数据大于200K就会抛出这个异常了。" class="headerlink" title="A: 2.Bitmap实现了Parceable接口，可以通过Intent.putExtra(String name , Parceable value)方法传递，但是太大会抛出TransactionTooLarge异常，因为底层判断Bitmap Transaction 失败且Intent的数据大于200K就会抛出这个异常了。"></a>A: 2.Bitmap实现了Parceable接口，可以通过Intent.putExtra(String name , Parceable value)方法传递，但是太大会抛出TransactionTooLarge异常，因为底层判断Bitmap Transaction 失败且Intent的数据大于200K就会抛出这个异常了。</h2><h1 id="Q：为什么Intent传递值会有大小限制"><a href="#Q：为什么Intent传递值会有大小限制" class="headerlink" title="Q：为什么Intent传递值会有大小限制"></a>Q：为什么Intent传递值会有大小限制</h1><h2 id="A：-应用再启动binder机制的时候回映射1M的内存缓冲区，所有正在进行的Binder事物共享这1M的缓冲区，当使用IPC时申请的缓存超过1M-其他事物占用内存时就会失败抛出TransactionTooLarge异常。"><a href="#A：-应用再启动binder机制的时候回映射1M的内存缓冲区，所有正在进行的Binder事物共享这1M的缓冲区，当使用IPC时申请的缓存超过1M-其他事物占用内存时就会失败抛出TransactionTooLarge异常。" class="headerlink" title="A： 应用再启动binder机制的时候回映射1M的内存缓冲区，所有正在进行的Binder事物共享这1M的缓冲区，当使用IPC时申请的缓存超过1M - 其他事物占用内存时就会失败抛出TransactionTooLarge异常。"></a>A： 应用再启动binder机制的时候回映射1M的内存缓冲区，所有正在进行的Binder事物共享这1M的缓冲区，当使用IPC时申请的缓存超过1M - 其他事物占用内存时就会失败抛出TransactionTooLarge异常。</h2><h1 id="Q：如何绕过这个异常呢"><a href="#Q：如何绕过这个异常呢" class="headerlink" title="Q：如何绕过这个异常呢"></a>Q：如何绕过这个异常呢</h1><h2 id="A：可以使用如下代码"><a href="#A：可以使用如下代码" class="headerlink" title="A：可以使用如下代码"></a>A：可以使用如下代码</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">Bunder bunder &#x3D; new Bunder();</span><br><span class="line">bunder.putBinder(&quot;binder&quot;,new IRemoteGetBitmap.Stub()&#123;</span><br><span class="line"></span><br><span class="line">	@Override</span><br><span class="line">	public Bitmap getBitmap() throws RemoteException&#123;</span><br><span class="line">		return mBitmap;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	&#125;);</span><br><span class="line"></span><br><span class="line">	intent.putExtras(bundle);</span><br></pre></td></tr></table></figure>
-
-<h1 id="Q-为什么putBunder的方式传Bitmap不会抛TranscationTooLargeExcaption异常"><a href="#Q-为什么putBunder的方式传Bitmap不会抛TranscationTooLargeExcaption异常" class="headerlink" title="Q:为什么putBunder的方式传Bitmap不会抛TranscationTooLargeExcaption异常"></a>Q:为什么putBunder的方式传Bitmap不会抛TranscationTooLargeExcaption异常</h1><h2 id="A：底层在IPC时把Bitmap写进Parcel的源码"><a href="#A：底层在IPC时把Bitmap写进Parcel的源码" class="headerlink" title="A：底层在IPC时把Bitmap写进Parcel的源码"></a>A：底层在IPC时把Bitmap写进Parcel的源码</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">Android - <span class="number">28</span> Bitmap.cpp</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> jboolean <span class="title">Bitmap_writeToParcel</span><span class="params">(JNIEnv* env, jobject, ...)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 拿到 Native 的 Bitmap                                </span></span><br><span class="line">    <span class="keyword">auto</span> bitmapWrapper = <span class="keyword">reinterpret_cast</span>&lt;BitmapWrapper*&gt;(bitmapHandle);</span><br><span class="line">    <span class="comment">// 拿到其对应的 SkBitmap, 用于获取 Bitmap 的像素信息</span></span><br><span class="line">    bitmapWrapper-&gt;getSkBitmap(&amp;bitmap);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> fd = bitmapWrapper-&gt;bitmap().getAshmemFd();</span><br><span class="line">    <span class="keyword">if</span> (fd &gt;= <span class="number">0</span> &amp;&amp; !isMutable &amp;&amp; p-&gt;allowFds()) &#123;</span><br><span class="line">        <span class="comment">// Bitmap 带了 ashmemFd &amp;&amp; Bitmap 不可修改 &amp;&amp; Parcel 允许带 fd</span></span><br><span class="line">        <span class="comment">// 就直接把 FD 写到 Parcel 里，结束。</span></span><br><span class="line">        status = p-&gt;writeDupImmutableBlobFileDescriptor(fd);</span><br><span class="line">        <span class="keyword">return</span> JNI_TRUE;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 不满足上面的条件就要把 Bitmap 拷贝到一块新的缓冲区</span></span><br><span class="line">    android::Parcel::WritableBlob blob;</span><br><span class="line">    <span class="comment">// 通过 writeBlob 拿到一块缓冲区 blob</span></span><br><span class="line">    status = p-&gt;writeBlob(<span class="built_in">size</span>, mutableCopy, &amp;blob);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取像素信息并写到前面拿到缓冲区 blob</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">void</span>* pSrc =  bitmap.getPixels();</span><br><span class="line">    <span class="keyword">if</span> (pSrc == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="built_in">memset</span>(blob.data(), <span class="number">0</span>, <span class="built_in">size</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">memcpy</span>(blob.data(), pSrc, <span class="built_in">size</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="然后看一下writeBlob是怎么获取缓冲区的，writeBlob虽然方法名字写着whrite，但写入操作是在writeBlob方法之后进行处理的"><a href="#然后看一下writeBlob是怎么获取缓冲区的，writeBlob虽然方法名字写着whrite，但写入操作是在writeBlob方法之后进行处理的" class="headerlink" title="然后看一下writeBlob是怎么获取缓冲区的，writeBlob虽然方法名字写着whrite，但写入操作是在writeBlob方法之后进行处理的"></a>然后看一下writeBlob是怎么获取缓冲区的，writeBlob虽然方法名字写着whrite，但写入操作是在writeBlob方法之后进行处理的</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">Android - <span class="number">28</span> Parcel.cpp</span><br><span class="line"><span class="comment">// Maximum size of a blob to transfer in-place.</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="keyword">size_t</span> BLOB_INPLACE_LIMIT = <span class="number">16</span> * <span class="number">1024</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">status_t</span> <span class="title">Parcel::writeBlob</span><span class="params">(<span class="keyword">size_t</span> len, <span class="keyword">bool</span> mutableCopy, WritableBlob* outBlob)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!mAllowFds || len &lt;= BLOB_INPLACE_LIMIT) &#123;</span><br><span class="line">        <span class="comment">// 如果不允许带 fd ，或者这个数据小于 16K</span></span><br><span class="line">        <span class="comment">// 就直接在 Parcel 的缓冲区里分配一块空间来保存这个数据</span></span><br><span class="line">        status = writeInt32(BLOB_INPLACE);</span><br><span class="line">        <span class="keyword">void</span>* ptr = writeInplace(len);</span><br><span class="line">        outBlob-&gt;init(<span class="number">-1</span>, ptr, len, <span class="literal">false</span>);</span><br><span class="line">        <span class="keyword">return</span> NO_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 另外开辟一个 ashmem，映射出一块内存，后续数据将保存在 ashmem 的内存里</span></span><br><span class="line">    <span class="keyword">int</span> fd = ashmem_create_region(<span class="string">"Parcel Blob"</span>, len);</span><br><span class="line">    <span class="keyword">void</span>* ptr = ::mmap(<span class="literal">NULL</span>, len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, <span class="number">0</span>);</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// parcel 里只写个 fd 就好了，这样就算数据量很大，parcel 自己的缓冲区也不用很大</span></span><br><span class="line">    status = writeFileDescriptor(fd, <span class="literal">true</span> <span class="comment">/*takeOwnership*/</span>);</span><br><span class="line">    outBlob-&gt;init(fd, ptr, len, mutableCopy);</span><br><span class="line">    <span class="keyword">return</span> status;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="通过上面的分析，我们可以看出，同一个Bitmap写入到Parcel所占的缓冲区大笑和Pacel的allowFds有关。"><a href="#通过上面的分析，我们可以看出，同一个Bitmap写入到Parcel所占的缓冲区大笑和Pacel的allowFds有关。" class="headerlink" title="通过上面的分析，我们可以看出，同一个Bitmap写入到Parcel所占的缓冲区大笑和Pacel的allowFds有关。"></a>通过上面的分析，我们可以看出，同一个Bitmap写入到Parcel所占的缓冲区大笑和Pacel的allowFds有关。</h2><p>通过直接Intent传Bitmap容易抛TransactionTooLargeException异常就是因为Parcel的allowFds = false，直接把Bitmap写入缓冲区占用了较大的内存。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><h2 id="较大的Bitmap通过Intent传递容易抛异常是因为Intent启动组件时，系统禁掉了文件描述符fd机制，bitmap无法利用共享内存，只能拷贝到Biner映射的缓冲区，导致缓冲区超限，出发异常，而通过putBinder的方式避免了Intent禁用描述符的影响，bitmap写parcel时的allowFds默认是true，可以利用共享内存，所以能高效传递图片。"><a href="#较大的Bitmap通过Intent传递容易抛异常是因为Intent启动组件时，系统禁掉了文件描述符fd机制，bitmap无法利用共享内存，只能拷贝到Biner映射的缓冲区，导致缓冲区超限，出发异常，而通过putBinder的方式避免了Intent禁用描述符的影响，bitmap写parcel时的allowFds默认是true，可以利用共享内存，所以能高效传递图片。" class="headerlink" title="较大的Bitmap通过Intent传递容易抛异常是因为Intent启动组件时，系统禁掉了文件描述符fd机制，bitmap无法利用共享内存，只能拷贝到Biner映射的缓冲区，导致缓冲区超限，出发异常，而通过putBinder的方式避免了Intent禁用描述符的影响，bitmap写parcel时的allowFds默认是true，可以利用共享内存，所以能高效传递图片。"></a>较大的Bitmap通过Intent传递容易抛异常是因为Intent启动组件时，系统禁掉了文件描述符fd机制，bitmap无法利用共享内存，只能拷贝到Biner映射的缓冲区，导致缓冲区超限，出发异常，而通过putBinder的方式避免了Intent禁用描述符的影响，bitmap写parcel时的allowFds默认是true，可以利用共享内存，所以能高效传递图片。</h2>]]></content>
-      <tags>
-        <tag>面试QA</tag>
       </tags>
   </entry>
 </search>
